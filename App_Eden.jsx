@@ -892,48 +892,46 @@ export default function App() {
               return;
             }
 
-            // Process nodes to ensure all data is properly structured
-            const nodesWithColors = importedData.nodes.map(node => {
-              // Ensure node has all required properties
-              const processedNode = {
+            // Process nodes to ensure all data is properly structured and clear metrics
+            const processedNodes = importedData.nodes.map(node => {
+              // Ensure node has all required properties and clear metrics
+              return {
                 ...node,
                 data: {
                   ...node.data,
                   color: node.data.color || "#ffffff",
                   theory: importedData.theory,
-                  label: node.data.label || ""
+                  label: node.data.label || "",
+                  metrics: null,
+                  selectedMetric: null
                 }
               };
-              
-              // Log node data for debugging
-              console.log('Processing node:', processedNode);
-              
-              return processedNode;
             });
 
             // Switch to the imported theory
             setSelectedTheory(importedData.theory);
             
-            // Update the network with processed nodes
-            const updatedNetwork = {
-              nodes: nodesWithColors,
-              edges: importedData.edges
-            };
-
-            // Update current view
-            setNodes(nodesWithColors);
+            // Update current view with processed nodes
+            setNodes(processedNodes);
             setEdges(importedData.edges);
+            setShowMetrics(false);
 
             // Update theory networks state
             setTheoryNetworks(prev => ({
               ...prev,
-              [importedData.theory]: updatedNetwork
+              [importedData.theory]: {
+                nodes: processedNodes,
+                edges: importedData.edges
+              }
             }));
 
             // Update localStorage
             localStorage.setItem('theoryNetworks', JSON.stringify({
               ...theoryNetworks,
-              [importedData.theory]: updatedNetwork
+              [importedData.theory]: {
+                nodes: processedNodes,
+                edges: importedData.edges
+              }
             }));
             localStorage.setItem('selectedTheory', importedData.theory);
 
