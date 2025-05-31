@@ -258,7 +258,7 @@ const CustomNode = ({ id, data, selected }) => {
       style={{
         border: `2px solid ${isNewBox ? "#4CAF50" : "#333"}`,
         borderRadius: 8,
-        padding: "8px 10px",
+        padding: "2px 8px",
         background: color, // Use the color from state
         width: 220,
         minHeight: 100,
