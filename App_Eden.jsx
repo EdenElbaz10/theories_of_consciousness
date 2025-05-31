@@ -224,12 +224,10 @@ const getInitialNetworkState = () => {
 };
 
 const CustomNode = ({ id, data, selected }) => {
-  // Initialize color state from data.color, ensuring it's preserved
   const [color, setColor] = useState(data.color || "#ffffff");
   const [isEditing, setIsEditing] = useState(false);
   const [label, setLabel] = useState(data.label);
 
-  // Update color state when data.color changes
   useEffect(() => {
     setColor(data.color || "#ffffff");
   }, [data.color]);
@@ -253,13 +251,39 @@ const CustomNode = ({ id, data, selected }) => {
     claims.includes(data.label)
   );
 
+  // Add metric circle if metrics data is available
+  const metricCircle = data.metrics && data.selectedMetric ? (
+    <div
+      style={{
+        position: "absolute",
+        top: "-25px",
+        right: "-25px",
+        width: "40px",
+        height: "40px",
+        borderRadius: "50%",
+        backgroundColor: `rgb(0, ${Math.floor(150 + (data.metrics[data.selectedMetric] * 100))}, 255)`,
+        color: "white",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: "11px",
+        fontWeight: "bold",
+        border: "2px solid white",
+        boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+        zIndex: 10
+      }}
+    >
+      {data.metrics[data.selectedMetric].toFixed(2)}
+    </div>
+  ) : null;
+
   return (
     <div
       style={{
         border: `2px solid ${isNewBox ? "#4CAF50" : "#333"}`,
         borderRadius: 8,
         padding: "2px 8px",
-        background: color, // Use the color from state
+        background: color,
         width: 220,
         minHeight: 100,
         fontSize: 12,
@@ -274,6 +298,7 @@ const CustomNode = ({ id, data, selected }) => {
       }}
       onDoubleClick={onDoubleClick}
     >
+      {metricCircle}
       {["Top", "Right", "Bottom", "Left"].map((pos) => (
         <Handle
           key={pos}
@@ -337,6 +362,276 @@ const CustomNode = ({ id, data, selected }) => {
 
 const nodeTypes = { custom: CustomNode };
 
+const calculateNetworkMetrics = (nodes, edges) => {
+  // First, identify connected nodes (nodes with at least one edge)
+  const connectedNodeIds = new Set();
+  edges.forEach(edge => {
+    connectedNodeIds.add(edge.source);
+    connectedNodeIds.add(edge.target);
+  });
+
+  // Filter nodes to only include connected ones
+  const connectedNodes = nodes.filter(node => connectedNodeIds.has(node.id));
+  const N = connectedNodes.length; // Total number of connected nodes
+  
+  if (N === 0) return {
+    nodeMetrics: {},
+    globalMetrics: {
+      networkSize: 0,
+      edgeCount: 0
+    }
+  };
+
+  // Create adjacency map for quick lookups
+  const adjacencyMap = {};
+  edges.forEach(edge => {
+    if (!adjacencyMap[edge.source]) adjacencyMap[edge.source] = [];
+    adjacencyMap[edge.source].push(edge.target);
+  });
+
+  // Calculate PageRank
+  const calculatePageRank = () => {
+    const d = 0.85; // damping factor (alpha in NetworkX)
+    const epsilon = 1e-6; // NetworkX's default tolerance
+    const maxIter = 100; // NetworkX's default max_iter
+    let pagerank = {};
+    
+    // Initialize PageRank values for all nodes (1/N)
+    connectedNodes.forEach(node => pagerank[node.id] = 1/N);
+    
+    // Get dangling nodes (nodes with no outgoing edges)
+    const danglingNodes = connectedNodes
+      .filter(node => !adjacencyMap[node.id] || adjacencyMap[node.id].length === 0)
+      .map(node => node.id);
+
+    // Iterate until convergence
+    for (let iter = 0; iter < maxIter; iter++) {
+      let newPagerank = {};
+      let danglingSum = 0;
+      
+      // Calculate dangling sum
+      danglingNodes.forEach(nodeId => {
+        danglingSum += pagerank[nodeId];
+      });
+
+      // Update PageRank values
+      connectedNodes.forEach(node => {
+        // Initialize with damping factor distribution
+        let sum = 0;
+        
+        // Add contribution of incoming edges
+        edges.forEach(edge => {
+          if (edge.target === node.id) {
+            const sourceOutDegree = adjacencyMap[edge.source] ? adjacencyMap[edge.source].length : 0;
+            if (sourceOutDegree > 0) {
+              sum += pagerank[edge.source] / sourceOutDegree;
+            }
+          }
+        });
+
+        // Calculate new PageRank value
+        newPagerank[node.id] = ((1 - d) / N) + 
+                              d * (sum + (danglingSum / N));
+      });
+
+      // Check for convergence
+      let diff = 0;
+      connectedNodes.forEach(node => {
+        diff += Math.abs(newPagerank[node.id] - pagerank[node.id]);
+      });
+      
+      pagerank = {...newPagerank};
+      
+      if (diff < epsilon) {
+        break;
+      }
+    }
+
+    // Normalize to sum to 1
+    let totalRank = Object.values(pagerank).reduce((a, b) => a + b, 0);
+    Object.keys(pagerank).forEach(nodeId => {
+      pagerank[nodeId] = pagerank[nodeId] / totalRank;
+    });
+
+    return pagerank;
+  };
+
+  // Calculate LRC (Local Reaching Centrality)
+  const calculateLRC = () => {
+    const lrc = {};
+    
+    connectedNodes.forEach(node => {
+      // Implement single_source_shortest_path_length
+      const distances = {};
+      const queue = [[node.id, 0]];
+      const visited = new Set();
+      
+      while (queue.length > 0) {
+        const [current, dist] = queue.shift();
+        if (!visited.has(current)) {
+          visited.add(current);
+          distances[current] = dist;
+          
+          if (adjacencyMap[current]) {
+            adjacencyMap[current].forEach(neighbor => {
+              if (!visited.has(neighbor)) {
+                queue.push([neighbor, dist + 1]);
+              }
+            });
+          }
+        }
+      }
+      
+      // Calculate LRC value
+      let sum = 0;
+      Object.entries(distances).forEach(([target, dist]) => {
+        if (dist > 0) {
+          sum += 1 / dist;
+        }
+      });
+      
+      lrc[node.id] = sum / (N - 1);
+    });
+    
+    return lrc;
+  };
+
+  // Calculate LRC_NX (NetworkX's implementation)
+  const calculateLRC_NX = () => {
+    const lrc_nx = {};
+    
+    connectedNodes.forEach(node => {
+      let reachable = 0;
+      const visited = new Set();
+      const queue = [node.id];
+      
+      while (queue.length > 0) {
+        const current = queue.shift();
+        if (!visited.has(current)) {
+          visited.add(current);
+          if (current !== node.id) reachable++;
+          
+          if (adjacencyMap[current]) {
+            adjacencyMap[current].forEach(neighbor => {
+              if (!visited.has(neighbor)) {
+                queue.push(neighbor);
+              }
+            });
+          }
+        }
+      }
+      
+      lrc_nx[node.id] = reachable / (N - 1);
+    });
+    
+    return lrc_nx;
+  };
+
+  // Calculate Betweenness Centrality
+  const calculateBetweenness = () => {
+    const betweenness = {};
+    connectedNodes.forEach(node => betweenness[node.id] = 0);
+
+    // For each pair of nodes
+    connectedNodes.forEach(source => {
+      // Implement Brandes' algorithm
+      const stack = [];
+      const predecessors = {};
+      const sigma = {};
+      const distance = {};
+      const delta = {};
+      
+      connectedNodes.forEach(node => {
+        predecessors[node.id] = [];
+        sigma[node.id] = 0;
+        distance[node.id] = -1;
+        delta[node.id] = 0;
+      });
+
+      sigma[source.id] = 1;
+      distance[source.id] = 0;
+      const queue = [source.id];
+      
+      while (queue.length > 0) {
+        const v = queue.shift();
+        stack.push(v);
+        
+        if (adjacencyMap[v]) {
+          adjacencyMap[v].forEach(w => {
+            // Path discovery
+            if (distance[w] < 0) {
+              queue.push(w);
+              distance[w] = distance[v] + 1;
+            }
+            // Path counting
+            if (distance[w] === distance[v] + 1) {
+              sigma[w] += sigma[v];
+              predecessors[w].push(v);
+            }
+          });
+        }
+      }
+
+      // Accumulation
+      while (stack.length > 0) {
+        const w = stack.pop();
+        predecessors[w].forEach(v => {
+          delta[v] += (sigma[v] / sigma[w]) * (1 + delta[w]);
+        });
+        if (w !== source.id) {
+          betweenness[w] += delta[w];
+        }
+      }
+    });
+
+    // Normalize
+    const scale = (N - 1) * (N - 2);
+    if (scale > 0) {
+      connectedNodes.forEach(node => {
+        betweenness[node.id] = betweenness[node.id] / scale;
+      });
+    }
+
+    return betweenness;
+  };
+
+  // Calculate all metrics
+  const pagerank = calculatePageRank();
+  const lrc = calculateLRC();
+  const lrc_nx = calculateLRC_NX();
+  const betweenness = calculateBetweenness();
+
+  // Initialize metrics for all nodes (including unconnected ones)
+  const nodeMetrics = {};
+  nodes.forEach(node => {
+    if (connectedNodeIds.has(node.id)) {
+      // For connected nodes, use calculated metrics
+      nodeMetrics[node.id] = {
+        'PageRank': pagerank[node.id],
+        'LRC': lrc[node.id],
+        'LRC_NX': lrc_nx[node.id],
+        'Betweenness Centrality': betweenness[node.id]
+      };
+    } else {
+      // For unconnected nodes, set all metrics to 0
+      nodeMetrics[node.id] = {
+        'PageRank': 0,
+        'LRC': 0,
+        'LRC_NX': 0,
+        'Betweenness Centrality': 0
+      };
+    }
+  });
+
+  return {
+    nodeMetrics,
+    globalMetrics: {
+      networkSize: N,
+      edgeCount: edges.length
+    }
+  };
+};
+
 export default function App() {
   const [selectedTheory, setSelectedTheory] = useState(() => {
     return localStorage.getItem('selectedTheory') || "RPT";
@@ -345,6 +640,10 @@ export default function App() {
   const [theoryNetworks, setTheoryNetworks] = useState(getInitialNetworkState);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  const [selectedMetric, setSelectedMetric] = useState('PageRank');
+  const [showMetrics, setShowMetrics] = useState(false);
+  const [networkMetrics, setNetworkMetrics] = useState(null);
 
   // Load the selected theory's network
   useEffect(() => {
@@ -408,6 +707,21 @@ export default function App() {
     };
   }, [setNodes]);
 
+  // Add this new useEffect to handle metric selection changes
+  useEffect(() => {
+    if (networkMetrics && nodes.length > 0) {
+      const updatedNodes = nodes.map(node => ({
+        ...node,
+        data: {
+          ...node.data,
+          metrics: networkMetrics.nodeMetrics[node.id],
+          selectedMetric: selectedMetric
+        }
+      }));
+      setNodes(updatedNodes);
+    }
+  }, [selectedMetric]); // This effect runs when selectedMetric changes
+
   const changeTheory = (theory) => {
     if (theory !== selectedTheory) {
       // Save current state before switching
@@ -428,25 +742,38 @@ export default function App() {
     // Get initial node positions
     const initialNodes = getInitialNodes(selectedTheory);
     
-    // Map current nodes to preserve their colors and custom properties
+    // Map current nodes to preserve their colors and custom properties, but clear metrics
     const preservedNodes = nodes.map(existingNode => {
       // Find the corresponding initial node position
       const initialNode = initialNodes.find(n => n.id === existingNode.id);
       
       if (initialNode) {
-        // For theory nodes, preserve color but reset position
+        // For theory nodes, preserve color but reset position and clear metrics
         return {
           ...existingNode,
-          position: initialNode.position
+          position: initialNode.position,
+          data: {
+            ...existingNode.data,
+            metrics: null,
+            selectedMetric: null
+          }
         };
       }
       
-      // For custom nodes, keep them at their current position
-      return existingNode;
+      // For custom nodes, keep them at their current position but clear metrics
+      return {
+        ...existingNode,
+        data: {
+          ...existingNode.data,
+          metrics: null,
+          selectedMetric: null
+        }
+      };
     });
     
     setNodes(preservedNodes);
     setEdges([]);
+    setShowMetrics(false);
     
     // Update the current theory's network state
     setTheoryNetworks(prev => ({
@@ -622,6 +949,79 @@ export default function App() {
     fileInput.click();
   };
 
+  const analyzeNetwork = () => {
+    const metrics = calculateNetworkMetrics(nodes, edges);
+    setNetworkMetrics(metrics);
+    
+    // Update nodes to include metrics data
+    const newNodes = nodes.map(node => ({
+      ...node,
+      data: {
+        ...node.data,
+        metrics: metrics.nodeMetrics[node.id],
+        selectedMetric: selectedMetric
+      }
+    }));
+
+    setNodes(newNodes);
+    setShowMetrics(true);
+  };
+
+  // Add this component for the metrics panel
+  const MetricsPanel = () => {
+    if (!showMetrics || !networkMetrics) return null;
+
+    return (
+      <div
+        style={{
+          position: 'absolute',
+          top: 60,
+          right: 10,
+          zIndex: 10,
+          backgroundColor: 'white',
+          padding: '10px',
+          borderRadius: '6px',
+          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+          maxWidth: '250px',
+        }}
+      >
+        <h3 style={{ margin: '0 0 10px 0', fontSize: '14px' }}>Network Metrics</h3>
+        <select
+          value={selectedMetric}
+          onChange={(e) => {
+            setSelectedMetric(e.target.value);
+          }}
+          style={{
+            width: '100%',
+            marginBottom: '10px',
+            padding: '4px',
+            fontSize: '12px'
+          }}
+        >
+          <option value="PageRank">PageRank</option>
+          <option value="LRC">LRC</option>
+          <option value="LRC_NX">LRC (NetworkX)</option>
+          <option value="Betweenness Centrality">Betweenness Centrality</option>
+        </select>
+        <div style={{ fontSize: '12px' }}>
+          <p><strong>Nodes:</strong> {networkMetrics.globalMetrics.networkSize}</p>
+          <p><strong>Edges:</strong> {networkMetrics.globalMetrics.edgeCount}</p>
+        </div>
+        <button
+          onClick={() => setShowMetrics(false)}
+          style={{
+            padding: '4px 8px',
+            fontSize: '12px',
+            marginTop: '10px',
+            cursor: 'pointer'
+          }}
+        >
+          Close
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div style={{ height: "100vh", width: "100%" }}>
       <ReactFlowProvider>
@@ -690,7 +1090,7 @@ export default function App() {
             display: "flex",
             flexDirection: "column",
             gap: "6px",
-            width: "120px",
+            width: "130px",
           }}
         >
           <button 
@@ -706,7 +1106,7 @@ export default function App() {
               textAlign: "left",
             }}
           >
-            Add New Box
+            Add New Claim
           </button>
           <button 
             onClick={resetLayout}
@@ -753,7 +1153,25 @@ export default function App() {
           >
             Load Map
           </button>
+          <button 
+            onClick={analyzeNetwork}
+            style={{
+              padding: "4px 8px",
+              fontSize: "12px",
+              cursor: "pointer",
+              backgroundColor: "#f0f0f0",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              width: "100%",
+              textAlign: "left",
+            }}
+          >
+            Analyze
+          </button>
         </div>
+
+        {/* Add the metrics panel */}
+        <MetricsPanel />
 
         <ReactFlow
           nodes={nodes}
