@@ -8,6 +8,7 @@ import ReactFlow, {
   ReactFlowProvider,
   useEdgesState,
   useNodesState,
+  applyNodeChanges,
   Handle,
   Position,
   Connection,
@@ -170,80 +171,63 @@ const theoryClaims = {
     "HOS relies on averages to track internal noise",
     "Stimuli presented when neuronal excitability is high should lead to more false alarms and higher visibility/confidence ratings",
   ],
+  other: [], // Empty array for other theory
 };
 
-// Create a function to check if a claim belongs to the current theory
+// Function to check if a claim belongs to a theory
 const isClaimFromTheory = (claim, theory) => {
+  if (theory === "other") {
+    return false; // 'other' theory claims are always considered new
+  }
   return theoryClaims[theory]?.includes(claim) || false;
 };
 
-const getInitialNodes = (theory) => {
-  if (!theory || !theoryClaims[theory]) {
-    console.error('Invalid theory selected:', theory);
-    return [];
-  }
+// Add these constants at the top of the file, before the App component
+const GRID_SIZE = {
+  HORIZONTAL_GAP: 50, // For fine movement control
+  VERTICAL_GAP: 35, // For fine movement control
+  SNAP_THRESHOLD: 15,
 
-  return theoryClaims[theory].map((text, i) => {
-    const column = Math.floor(i / 10);
-    const row = i % 10;
-    return {
-      id: `${theory}-${i + 1}`,
-      type: "custom",
-      data: { 
-        label: text, 
-        colors: ['#ffffff'],
-        theory: theory
-      },
-      position: {
-        x: 50 + column * 250,
-        y: 50 + row * 130,
-      },
-    };
-  });
+  // Increase vertical spacing while keeping horizontal the same
+  INITIAL_HORIZONTAL_SPACING: 250, // Keep column spacing
+  INITIAL_VERTICAL_SPACING: 130, // Increased from 110 to 130 for more row spacing
+  BOXES_PER_COLUMN: 11, // Keep 10 boxes per column
 };
 
-const getInitialNetworkState = () => {
-  try {
-    const storedNetworks = localStorage.getItem('theoryNetworks');
-    if (storedNetworks) {
-      return JSON.parse(storedNetworks);
-    }
-  } catch (error) {
-    console.error('Error loading from localStorage:', error);
-  }
-  
-  // Return default state if nothing in localStorage
+const snapToGrid = (position) => {
+  const row = Math.round(position.y / GRID_SIZE.VERTICAL_GAP);
+  const col = Math.round(position.x / GRID_SIZE.HORIZONTAL_GAP);
   return {
-    RPT: { nodes: getInitialNodes("RPT"), edges: [] },
-    GNW: { nodes: getInitialNodes("GNW"), edges: [] },
-    IIT: { nodes: getInitialNodes("IIT"), edges: [] },
-    HOT: { nodes: getInitialNodes("HOT"), edges: [] },
+    x: col * GRID_SIZE.HORIZONTAL_GAP,
+    y: row * GRID_SIZE.VERTICAL_GAP,
   };
 };
 
 const calculateNetworkMetrics = (nodes, edges) => {
   // Identify connected nodes (nodes with at least one edge)
   const connectedNodeIds = new Set();
-  edges.forEach(edge => {
+  edges.forEach((edge) => {
     connectedNodeIds.add(edge.source);
     connectedNodeIds.add(edge.target);
   });
 
   // Filter nodes to only include connected ones
-  const connectedNodes = nodes.filter(node => connectedNodeIds.has(node.id));
+  const connectedNodes = nodes.filter((node) => connectedNodeIds.has(node.id));
   const N = connectedNodes.length; // Total number of connected nodes
-  
-  if (N === 0) return {
-    nodeMetrics: {},
-    globalMetrics: {
-      networkSize: 0,
-      edgeCount: 0
-    }
-  };
+
+  if (N === 0) {
+    return {
+      nodeMetrics: {},
+      globalMetrics: {
+        networkSize: 0,
+        edgeCount: 0,
+      },
+    };
+  }
 
   // Create adjacency map for quick lookups
   const adjacencyMap = {};
-  edges.forEach(edge => {
+  edges.forEach((edge) => {
     if (!adjacencyMap[edge.source]) adjacencyMap[edge.source] = [];
     adjacencyMap[edge.source].push(edge.target);
   });
@@ -254,51 +238,51 @@ const calculateNetworkMetrics = (nodes, edges) => {
     const epsilon = 1e-6;
     const maxIter = 100;
     let pagerank = {};
-    
+
     // Initialize PageRank values for connected nodes only
-    connectedNodes.forEach(node => pagerank[node.id] = 1/N);
-    
+    connectedNodes.forEach((node) => (pagerank[node.id] = 1 / N));
+
     // Get dangling nodes (nodes with no outgoing edges)
     const danglingNodes = connectedNodes
-      .filter(node => !adjacencyMap[node.id] || adjacencyMap[node.id].length === 0)
-      .map(node => node.id);
+      .filter(
+        (node) => !adjacencyMap[node.id] || adjacencyMap[node.id].length === 0
+      )
+      .map((node) => node.id);
 
     for (let iter = 0; iter < maxIter; iter++) {
       let newPagerank = {};
       let danglingSum = 0;
-      
-      danglingNodes.forEach(nodeId => {
+
+      danglingNodes.forEach((nodeId) => {
         danglingSum += pagerank[nodeId];
       });
 
-      connectedNodes.forEach(node => {
+      connectedNodes.forEach((node) => {
         let sum = 0;
-        
-        edges.forEach(edge => {
+        edges.forEach((edge) => {
           if (edge.target === node.id) {
-            const sourceOutDegree = adjacencyMap[edge.source] ? adjacencyMap[edge.source].length : 0;
+            const sourceOutDegree = adjacencyMap[edge.source]?.length || 0;
             if (sourceOutDegree > 0) {
               sum += pagerank[edge.source] / sourceOutDegree;
             }
           }
         });
 
-        newPagerank[node.id] = ((1 - d) / N) + 
-                              d * (sum + (danglingSum / N));
+        newPagerank[node.id] = (1 - d) / N + d * (sum + danglingSum / N);
       });
 
       let diff = 0;
-      connectedNodes.forEach(node => {
+      connectedNodes.forEach((node) => {
         diff += Math.abs(newPagerank[node.id] - pagerank[node.id]);
       });
-      
-      pagerank = {...newPagerank};
-      
+
+      pagerank = { ...newPagerank };
+
       if (diff < epsilon) break;
     }
 
     let totalRank = Object.values(pagerank).reduce((a, b) => a + b, 0);
-    Object.keys(pagerank).forEach(nodeId => {
+    Object.keys(pagerank).forEach((nodeId) => {
       pagerank[nodeId] = pagerank[nodeId] / totalRank;
     });
 
@@ -308,20 +292,20 @@ const calculateNetworkMetrics = (nodes, edges) => {
   // Calculate LRC (Local Reaching Centrality)
   const calculateLRC = () => {
     const lrc = {};
-    
-    connectedNodes.forEach(node => {
+
+    connectedNodes.forEach((node) => {
       const distances = {};
       const queue = [[node.id, 0]];
       const visited = new Set();
-      
+
       while (queue.length > 0) {
         const [current, dist] = queue.shift();
         if (!visited.has(current)) {
           visited.add(current);
           distances[current] = dist;
-          
+
           if (adjacencyMap[current]) {
-            adjacencyMap[current].forEach(neighbor => {
+            adjacencyMap[current].forEach((neighbor) => {
               if (!visited.has(neighbor)) {
                 queue.push([neighbor, dist + 1]);
               }
@@ -329,37 +313,37 @@ const calculateNetworkMetrics = (nodes, edges) => {
           }
         }
       }
-      
+
       let sum = 0;
       Object.entries(distances).forEach(([target, dist]) => {
         if (dist > 0) {
           sum += 1 / dist;
         }
       });
-      
+
       lrc[node.id] = sum / (N - 1);
     });
-    
+
     return lrc;
   };
 
   // Calculate LRC_NX
   const calculateLRC_NX = () => {
     const lrc_nx = {};
-    
-    connectedNodes.forEach(node => {
+
+    connectedNodes.forEach((node) => {
       let reachable = 0;
       const visited = new Set();
       const queue = [node.id];
-      
+
       while (queue.length > 0) {
         const current = queue.shift();
         if (!visited.has(current)) {
           visited.add(current);
           if (current !== node.id) reachable++;
-          
+
           if (adjacencyMap[current]) {
-            adjacencyMap[current].forEach(neighbor => {
+            adjacencyMap[current].forEach((neighbor) => {
               if (!visited.has(neighbor)) {
                 queue.push(neighbor);
               }
@@ -367,26 +351,26 @@ const calculateNetworkMetrics = (nodes, edges) => {
           }
         }
       }
-      
+
       lrc_nx[node.id] = reachable / (N - 1);
     });
-    
+
     return lrc_nx;
   };
 
   // Calculate Betweenness Centrality
   const calculateBetweenness = () => {
     const betweenness = {};
-    connectedNodes.forEach(node => betweenness[node.id] = 0);
+    connectedNodes.forEach((node) => (betweenness[node.id] = 0));
 
-    connectedNodes.forEach(source => {
+    connectedNodes.forEach((source) => {
       const stack = [];
       const predecessors = {};
       const sigma = {};
       const distance = {};
       const delta = {};
-      
-      connectedNodes.forEach(node => {
+
+      connectedNodes.forEach((node) => {
         predecessors[node.id] = [];
         sigma[node.id] = 0;
         distance[node.id] = -1;
@@ -396,13 +380,13 @@ const calculateNetworkMetrics = (nodes, edges) => {
       sigma[source.id] = 1;
       distance[source.id] = 0;
       const queue = [source.id];
-      
+
       while (queue.length > 0) {
         const v = queue.shift();
         stack.push(v);
-        
+
         if (adjacencyMap[v]) {
-          adjacencyMap[v].forEach(w => {
+          adjacencyMap[v].forEach((w) => {
             if (distance[w] < 0) {
               queue.push(w);
               distance[w] = distance[v] + 1;
@@ -417,7 +401,7 @@ const calculateNetworkMetrics = (nodes, edges) => {
 
       while (stack.length > 0) {
         const w = stack.pop();
-        predecessors[w].forEach(v => {
+        predecessors[w].forEach((v) => {
           delta[v] += (sigma[v] / sigma[w]) * (1 + delta[w]);
         });
         if (w !== source.id) {
@@ -428,7 +412,7 @@ const calculateNetworkMetrics = (nodes, edges) => {
 
     const scale = (N - 1) * (N - 2);
     if (scale > 0) {
-      connectedNodes.forEach(node => {
+      connectedNodes.forEach((node) => {
         betweenness[node.id] = betweenness[node.id] / scale;
       });
     }
@@ -442,51 +426,164 @@ const calculateNetworkMetrics = (nodes, edges) => {
   const lrc_nx = calculateLRC_NX();
   const betweenness = calculateBetweenness();
 
-  // Initialize metrics only for connected nodes
+  // Initialize metrics for all nodes
   const nodeMetrics = {};
-  nodes.forEach(node => {
+  nodes.forEach((node) => {
     if (connectedNodeIds.has(node.id)) {
       nodeMetrics[node.id] = {
-        'PageRank': pagerank[node.id],
-        'LRC': lrc[node.id],
-        'LRC_NX': lrc_nx[node.id],
-        'Betweenness Centrality': betweenness[node.id]
+        PageRank: pagerank[node.id],
+        LRC: lrc[node.id],
+        LRC_NX: lrc_nx[node.id],
+        "Betweenness Centrality": betweenness[node.id],
       };
     } else {
-      // For unconnected nodes, don't include them in the metrics
-      nodeMetrics[node.id] = null;
+      // For unconnected nodes, set metrics to 0
+      nodeMetrics[node.id] = {
+        PageRank: 0,
+        LRC: 0,
+        LRC_NX: 0,
+        "Betweenness Centrality": 0,
+      };
     }
   });
 
   return {
     nodeMetrics,
     globalMetrics: {
-      networkSize: N, // Only count connected nodes
-      edgeCount: edges.length
-    }
+      networkSize: N,
+      edgeCount: edges.length,
+    },
   };
 };
 
 export default function App() {
   const [selectedTheory, setSelectedTheory] = useState(() => {
-    return localStorage.getItem('selectedTheory') || "RPT";
+    const stored = localStorage.getItem("selectedTheory");
+    return stored && ["RPT", "GNW", "IIT", "HOT", "other"].includes(stored)
+      ? stored
+      : "RPT";
   });
-  
-  const [theoryNetworks, setTheoryNetworks] = useState(getInitialNetworkState);
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [selectedMetric, setSelectedMetric] = useState('PageRank');
+
+  // Move getInitialNodes inside the component
+  const getInitialNodes = useCallback((theory) => {
+    if (!theory || !theoryClaims[theory]) {
+      console.error("Invalid theory selected:", theory);
+      return [];
+    }
+
+    if (theory === "other") {
+      return [
+        {
+          id: "other-1",
+          type: "custom",
+          data: {
+            label: "Double click to edit",
+            colors: ["#ffffff"],
+            theory: "other",
+          },
+          position: {
+            x: GRID_SIZE.INITIAL_HORIZONTAL_SPACING,
+            y: GRID_SIZE.INITIAL_VERTICAL_SPACING,
+          },
+        },
+      ];
+    }
+
+    return theoryClaims[theory].map((text, i) => {
+      const column = Math.floor(i / GRID_SIZE.BOXES_PER_COLUMN);
+      const row = i % GRID_SIZE.BOXES_PER_COLUMN;
+      return {
+        id: `${theory}-${i + 1}`,
+        type: "custom",
+        data: {
+          label: text,
+          colors: ["#ffffff"],
+          theory: theory,
+        },
+        position: {
+          x: column * GRID_SIZE.INITIAL_HORIZONTAL_SPACING,
+          y: row * GRID_SIZE.INITIAL_VERTICAL_SPACING,
+        },
+      };
+    });
+  }, []);
+
+  const [theoryNetworks, setTheoryNetworks] = useState(() => {
+    try {
+      const storedNetworks = localStorage.getItem("theoryNetworks");
+      if (storedNetworks) {
+        const parsed = JSON.parse(storedNetworks);
+        const theories = ["RPT", "GNW", "IIT", "HOT", "other"];
+        const validatedNetworks = {};
+
+        theories.forEach((theory) => {
+          if (theory === "other") {
+            // For 'other' theory, always use default nodes on initial load
+            validatedNetworks.other = {
+              nodes: getInitialNodes("other"),
+              edges: [],
+            };
+          } else {
+            // For standard theories, check if stored network exists and has valid nodes
+            if (
+              parsed[theory]?.nodes?.length > 0 &&
+              parsed[theory].nodes.every((node) => node.data?.theory === theory)
+            ) {
+              validatedNetworks[theory] = parsed[theory];
+            } else {
+              validatedNetworks[theory] = {
+                nodes: getInitialNodes(theory),
+                edges: [],
+              };
+            }
+          }
+        });
+
+        return validatedNetworks;
+      }
+    } catch (error) {
+      console.error("Error loading from localStorage:", error);
+    }
+
+    // Return default state if nothing in localStorage
+    return {
+      RPT: { nodes: getInitialNodes("RPT"), edges: [] },
+      GNW: { nodes: getInitialNodes("GNW"), edges: [] },
+      IIT: { nodes: getInitialNodes("IIT"), edges: [] },
+      HOT: { nodes: getInitialNodes("HOT"), edges: [] },
+      other: { nodes: getInitialNodes("other"), edges: [] },
+    };
+  });
+
+  // Initialize nodes and edges with the selected theory's network
+  const [nodes, setNodes, onNodesChange] = useNodesState(() => {
+    const network = theoryNetworks[selectedTheory];
+    return network?.nodes || [];
+  });
+
+  const [edges, setEdges, onEdgesChange] = useEdgesState(() => {
+    const network = theoryNetworks[selectedTheory];
+    return network?.edges || [];
+  });
+
+  const [selectedMetric, setSelectedMetric] = useState("PageRank");
   const [showMetrics, setShowMetrics] = useState(false);
   const [networkMetrics, setNetworkMetrics] = useState(null);
   const [copiedColors, setCopiedColors] = useState(null);
 
-  const CustomNode = ({ id, data, selected, copiedColors, setCopiedColors }) => {
-    const [colors, setColors] = useState(data.colors || ['#ffffff']);
+  const CustomNode = ({
+    id,
+    data,
+    selected,
+    copiedColors,
+    setCopiedColors,
+  }) => {
+    const [colors, setColors] = useState(data.colors || ["#ffffff"]);
     const [isEditing, setIsEditing] = useState(false);
     const [label, setLabel] = useState(data.label);
 
     useEffect(() => {
-      setColors(data.colors || ['#ffffff']);
+      setColors(data.colors || ["#ffffff"]);
     }, [data.colors]);
 
     const onChangeColor = (index, newColor) => {
@@ -498,7 +595,7 @@ export default function App() {
 
     const addColor = () => {
       if (colors.length < 4) {
-        const newColors = [...colors, '#ffffff'];
+        const newColors = [...colors, "#ffffff"];
         setColors(newColors);
         window.updateNodeColors(id, newColors);
       }
@@ -525,56 +622,64 @@ export default function App() {
 
     // Create gradient background style
     const gradientStyle = {
-      background: colors.length > 1 
-        ? `linear-gradient(45deg, ${colors.join(', ')})`
-        : colors[0],
+      background:
+        colors.length > 1
+          ? `linear-gradient(45deg, ${colors.join(", ")})`
+          : colors[0],
     };
 
-    const isNewBox = !Object.values(theoryClaims).some(claims => 
-      claims.includes(data.label)
-    );
+    const isNewBox = !Object.values(theoryClaims)
+      .filter((claims) => Array.isArray(claims)) // Filter out null values
+      .some((claims) => claims.includes(data.label));
 
     // Add metric circle if metrics data is available
-    const metricCircle = data.metrics && data.selectedMetric ? (
-      <div
-        style={{
-          position: "absolute",
-          top: "-25px",
-          right: "-25px",
-          width: "40px",
-          height: "40px",
-          borderRadius: "50%",
-          backgroundColor: `rgb(0, ${Math.floor(150 + (data.metrics[data.selectedMetric] * 100))}, 255)`,
-          color: "white",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "11px",
-          fontWeight: "bold",
-          border: "2px solid white",
-          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-          zIndex: 10
-        }}
-      >
-        {data.metrics[data.selectedMetric].toFixed(2)}
-      </div>
-    ) : null;
+    const metricCircle =
+      data.metrics && data.selectedMetric ? (
+        <div
+          style={{
+            position: "absolute",
+            top: "-25px",
+            right: "-25px",
+            width: "40px",
+            height: "40px",
+            borderRadius: "50%",
+            backgroundColor: `rgb(0, ${Math.floor(
+              150 + data.metrics[data.selectedMetric] * 100
+            )}, 255)`,
+            color: "white",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "11px",
+            fontWeight: "bold",
+            border: "2px solid white",
+            boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+            zIndex: 10,
+          }}
+        >
+          {data.metrics[data.selectedMetric].toFixed(2)}
+        </div>
+      ) : null;
 
     // Define handle positions
     const handles = [
       // Top handles
-      { id: 'top-left', position: Position.Top, style: { left: '25%' } },
-      { id: 'top-center', position: Position.Top, style: { left: '50%' } },
-      { id: 'top-right', position: Position.Top, style: { left: '75%' } },
-      
+      { id: "top-left", position: Position.Top, style: { left: "25%" } },
+      { id: "top-center", position: Position.Top, style: { left: "50%" } },
+      { id: "top-right", position: Position.Top, style: { left: "75%" } },
+
       // Bottom handles
-      { id: 'bottom-left', position: Position.Bottom, style: { left: '25%' } },
-      { id: 'bottom-center', position: Position.Bottom, style: { left: '50%' } },
-      { id: 'bottom-right', position: Position.Bottom, style: { left: '75%' } },
-      
+      { id: "bottom-left", position: Position.Bottom, style: { left: "25%" } },
+      {
+        id: "bottom-center",
+        position: Position.Bottom,
+        style: { left: "50%" },
+      },
+      { id: "bottom-right", position: Position.Bottom, style: { left: "75%" } },
+
       // Side handles
-      { id: 'left', position: Position.Left, style: { top: '50%' } },
-      { id: 'right', position: Position.Right, style: { top: '50%' } }
+      { id: "left", position: Position.Left, style: { top: "50%" } },
+      { id: "right", position: Position.Right, style: { top: "50%" } },
     ];
 
     return (
@@ -611,7 +716,7 @@ export default function App() {
               width: "8px",
               height: "8px",
               border: "2px solid #fff",
-              ...handle.style
+              ...handle.style,
             }}
           />
         ))}
@@ -651,7 +756,14 @@ export default function App() {
         {selected && (
           <div style={{ marginTop: 6 }} className="nodrag">
             {colors.map((color, index) => (
-              <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+              <div
+                key={index}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  marginBottom: 4,
+                }}
+              >
                 <input
                   type="color"
                   value={color}
@@ -662,10 +774,10 @@ export default function App() {
                   <button
                     onClick={() => removeColor(index)}
                     style={{
-                      padding: '2px 6px',
-                      fontSize: '10px',
+                      padding: "2px 6px",
+                      fontSize: "10px",
                       marginLeft: 4,
-                      cursor: 'pointer',
+                      cursor: "pointer",
                     }}
                   >
                     ×
@@ -673,14 +785,14 @@ export default function App() {
                 )}
               </div>
             ))}
-            <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+            <div style={{ display: "flex", gap: "4px", marginTop: "4px" }}>
               {colors.length < 4 && (
                 <button
                   onClick={addColor}
                   style={{
-                    padding: '2px 6px',
-                    fontSize: '10px',
-                    cursor: 'pointer',
+                    padding: "2px 6px",
+                    fontSize: "10px",
+                    cursor: "pointer",
                   }}
                 >
                   + Add Color
@@ -689,9 +801,9 @@ export default function App() {
               <button
                 onClick={copyColors}
                 style={{
-                  padding: '2px 6px',
-                  fontSize: '10px',
-                  cursor: 'pointer',
+                  padding: "2px 6px",
+                  fontSize: "10px",
+                  cursor: "pointer",
                 }}
               >
                 Copy Colors
@@ -700,9 +812,9 @@ export default function App() {
                 <button
                   onClick={pasteColors}
                   style={{
-                    padding: '2px 6px',
-                    fontSize: '10px',
-                    cursor: 'pointer',
+                    padding: "2px 6px",
+                    fontSize: "10px",
+                    cursor: "pointer",
                   }}
                 >
                   Paste Colors
@@ -715,56 +827,74 @@ export default function App() {
     );
   };
 
-  const nodeTypes = useMemo(() => ({ 
-    custom: (props) => (
-      <CustomNode 
-        {...props} 
-        copiedColors={copiedColors}
-        setCopiedColors={setCopiedColors}
-      />
-    )
-  }), [copiedColors]);
+  const nodeTypes = useMemo(
+    () => ({
+      custom: (props) => (
+        <CustomNode
+          {...props}
+          copiedColors={copiedColors}
+          setCopiedColors={setCopiedColors}
+        />
+      ),
+    }),
+    [copiedColors]
+  );
 
   // Load the selected theory's network
   useEffect(() => {
-    setNodes(theoryNetworks[selectedTheory].nodes);
-    setEdges(theoryNetworks[selectedTheory].edges);
-  }, [selectedTheory]);
-
-  // Save changes to localStorage whenever networks change
-  useEffect(() => {
-    try {
-      localStorage.setItem('theoryNetworks', JSON.stringify(theoryNetworks));
-      localStorage.setItem('selectedTheory', selectedTheory);
-    } catch (error) {
-      console.error('Error saving to localStorage:', error);
+    const network = theoryNetworks[selectedTheory];
+    if (network?.nodes) {
+      // Ensure nodes have correct theory assigned
+      const updatedNodes = network.nodes.map((node) => ({
+        ...node,
+        data: { ...node.data, theory: selectedTheory },
+      }));
+      setNodes(updatedNodes);
+      setEdges(network.edges || []);
     }
-  }, [theoryNetworks, selectedTheory]);
+  }, [selectedTheory]);
 
   // Save changes back to the theory networks
   useEffect(() => {
-    setTheoryNetworks(prev => ({
-      ...prev,
-      [selectedTheory]: {
-        nodes: nodes,
-        edges: edges,
-      }
-    }));
+    if (selectedTheory && nodes.length > 0) {
+      setTheoryNetworks((prev) => ({
+        ...prev,
+        [selectedTheory]: {
+          nodes: [...nodes],
+          edges: [...edges],
+        },
+      }));
+    }
   }, [nodes, edges, selectedTheory]);
+
+  // Save to localStorage with debounce
+  useEffect(() => {
+    const saveToStorage = () => {
+      try {
+        localStorage.setItem("theoryNetworks", JSON.stringify(theoryNetworks));
+        localStorage.setItem("selectedTheory", selectedTheory);
+      } catch (error) {
+        console.error("Error saving to localStorage:", error);
+      }
+    };
+
+    const timeoutId = setTimeout(saveToStorage, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [theoryNetworks, selectedTheory]);
 
   // Update window functions for node manipulation
   useEffect(() => {
     window.updateNodeColors = (id, newColors) => {
       setNodes((nds) =>
         nds.map((n) =>
-          n.id === id 
-            ? { 
-                ...n, 
-                data: { 
-                  ...n.data, 
-                  colors: newColors 
-                } 
-              } 
+          n.id === id
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  colors: newColors,
+                },
+              }
             : n
         )
       );
@@ -773,14 +903,14 @@ export default function App() {
     window.updateNodeLabel = (id, newLabel) => {
       setNodes((nds) =>
         nds.map((n) =>
-          n.id === id 
-            ? { 
-                ...n, 
-                data: { 
-                  ...n.data, 
-                  label: newLabel 
-                } 
-              } 
+          n.id === id
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  label: newLabel,
+                },
+              }
             : n
         )
       );
@@ -790,13 +920,13 @@ export default function App() {
   // Add this new useEffect to handle metric selection changes
   useEffect(() => {
     if (networkMetrics && nodes.length > 0) {
-      const updatedNodes = nodes.map(node => ({
+      const updatedNodes = nodes.map((node) => ({
         ...node,
         data: {
           ...node.data,
           metrics: networkMetrics.nodeMetrics[node.id],
-          selectedMetric: selectedMetric
-        }
+          selectedMetric: selectedMetric,
+        },
       }));
       setNodes(updatedNodes);
     }
@@ -805,15 +935,39 @@ export default function App() {
   const changeTheory = (theory) => {
     if (theory !== selectedTheory) {
       // Save current state before switching
-      setTheoryNetworks(prev => ({
+      setTheoryNetworks((prev) => ({
         ...prev,
         [selectedTheory]: {
-          nodes: nodes,
+          nodes: nodes.map((node) => ({
+            ...node,
+            data: { ...node.data, theory: selectedTheory },
+          })),
           edges: edges,
-        }
+        },
       }));
-      
-      // Switch theory
+
+      // Switch theory and ensure proper initialization
+      if (theory === "other") {
+        // For 'other' theory, always ensure we have the default nodes
+        const otherNodes =
+          theoryNetworks.other?.nodes?.length > 0
+            ? theoryNetworks.other.nodes
+            : getInitialNodes("other");
+
+        setNodes(otherNodes);
+        setEdges(theoryNetworks.other?.edges || []);
+      } else {
+        // For standard theories, use stored or initial nodes
+        const network = theoryNetworks[theory];
+        if (network?.nodes?.length > 0) {
+          setNodes(network.nodes);
+          setEdges(network.edges || []);
+        } else {
+          setNodes(getInitialNodes(theory));
+          setEdges([]);
+        }
+      }
+
       setSelectedTheory(theory);
     }
   };
@@ -821,12 +975,12 @@ export default function App() {
   const resetLayout = () => {
     // Get initial node positions
     const initialNodes = getInitialNodes(selectedTheory);
-    
+
     // Map current nodes to preserve their colors and custom properties, but clear metrics
-    const preservedNodes = nodes.map(existingNode => {
+    const preservedNodes = nodes.map((existingNode) => {
       // Find the corresponding initial node position
-      const initialNode = initialNodes.find(n => n.id === existingNode.id);
-      
+      const initialNode = initialNodes.find((n) => n.id === existingNode.id);
+
       if (initialNode) {
         // For theory nodes, preserve color but reset position and clear metrics
         return {
@@ -835,46 +989,49 @@ export default function App() {
           data: {
             ...existingNode.data,
             metrics: null,
-            selectedMetric: null
-          }
+            selectedMetric: null,
+          },
         };
       }
-      
+
       // For custom nodes, keep them at their current position but clear metrics
       return {
         ...existingNode,
         data: {
           ...existingNode.data,
           metrics: null,
-          selectedMetric: null
-        }
+          selectedMetric: null,
+        },
       };
     });
-    
+
     setNodes(preservedNodes);
     setEdges([]);
     setShowMetrics(false);
-    
+
     // Update the current theory's network state
-    setTheoryNetworks(prev => ({
+    setTheoryNetworks((prev) => ({
       ...prev,
       [selectedTheory]: {
         nodes: preservedNodes,
         edges: [],
-      }
+      },
     }));
 
     // Update localStorage
     try {
-      localStorage.setItem('theoryNetworks', JSON.stringify({
-        ...theoryNetworks,
-        [selectedTheory]: {
-          nodes: preservedNodes,
-          edges: [],
-        }
-      }));
+      localStorage.setItem(
+        "theoryNetworks",
+        JSON.stringify({
+          ...theoryNetworks,
+          [selectedTheory]: {
+            nodes: preservedNodes,
+            edges: [],
+          },
+        })
+      );
     } catch (error) {
-      console.error('Error saving to localStorage:', error);
+      console.error("Error saving to localStorage:", error);
     }
   };
 
@@ -883,10 +1040,10 @@ export default function App() {
     const newNode = {
       id: newId,
       type: "custom",
-      data: { 
-        label: "Double click to edit", 
-        colors: ['#ffffff'],
-        theory: selectedTheory
+      data: {
+        label: "Double click to edit",
+        colors: ["#ffffff"],
+        theory: selectedTheory,
       },
       position: {
         x: Math.random() * 500 + 50,
@@ -898,11 +1055,11 @@ export default function App() {
 
   const onConnect = useCallback(
     (params) => {
-      const sourceNode = nodes.find(n => n.id === params.source);
-      const targetNode = nodes.find(n => n.id === params.target);
-      
+      const sourceNode = nodes.find((n) => n.id === params.source);
+      const targetNode = nodes.find((n) => n.id === params.target);
+
       if (sourceNode?.data.theory !== targetNode?.data.theory) {
-        console.warn('Cannot connect nodes from different theories');
+        console.warn("Cannot connect nodes from different theories");
         return;
       }
 
@@ -910,13 +1067,17 @@ export default function App() {
         ...params,
         type: "smoothstep",
         animated: false,
+        style: {
+          stroke: "#2a2a2a",
+          strokeWidth: 3.5,
+          opacity: 0.9,
+        },
         markerEnd: {
           type: MarkerType.ArrowClosed,
-          width: 20,
-          height: 20,
-          color: "#222",
+          width: 15,
+          height: 15,
+          color: "#2a2a2a",
         },
-        style: { stroke: "#222", strokeWidth: 2.5 },
       };
       setEdges((eds) => addEdge(connection, eds));
     },
@@ -925,42 +1086,48 @@ export default function App() {
 
   const exportNetwork = () => {
     const currentNetwork = theoryNetworks[selectedTheory];
-    
+
     // Clean up nodes before export by removing metrics data
-    const cleanedNodes = currentNetwork.nodes.map(node => ({
+    const cleanedNodes = currentNetwork.nodes.map((node) => ({
       ...node,
       data: {
         ...node.data,
         metrics: null,
         selectedMetric: null,
         color: node.data.color || "#ffffff",
-        colors: node.data.colors || ['#ffffff'],
-        theory: selectedTheory
-      }
+        colors: node.data.colors || ["#ffffff"],
+        theory: selectedTheory,
+      },
     }));
 
-    const data = JSON.stringify({ 
-      theory: selectedTheory,
-      nodes: cleanedNodes,
-      edges: currentNetwork.edges,
-      exportDate: new Date().toISOString(),
-      version: "1.0"
-    }, null, 2);
+    const data = JSON.stringify(
+      {
+        theory: selectedTheory,
+        nodes: cleanedNodes,
+        edges: currentNetwork.edges,
+        exportDate: new Date().toISOString(),
+        version: "1.0",
+      },
+      null,
+      2
+    );
 
     const blob = new Blob([data], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${selectedTheory}_network_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `${selectedTheory}_network_${
+      new Date().toISOString().split("T")[0]
+    }.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   const importNetwork = (event) => {
-    const fileInput = document.createElement('input');
-    fileInput.type = 'file';
-    fileInput.accept = '.json';
-    
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = ".json";
+
     fileInput.onchange = (e) => {
       const file = e.target.files[0];
       if (file) {
@@ -968,33 +1135,37 @@ export default function App() {
         reader.onload = (e) => {
           try {
             const importedData = JSON.parse(e.target.result);
-            
+
             // Validate imported data
-            if (!importedData.theory || !importedData.nodes || !importedData.edges) {
-              alert('Invalid map file format');
+            if (
+              !importedData.theory ||
+              !importedData.nodes ||
+              !importedData.edges
+            ) {
+              alert("Invalid map file format");
               return;
             }
 
             // Process nodes to ensure all data is properly structured
-            const processedNodes = importedData.nodes.map(node => {
+            const processedNodes = importedData.nodes.map((node) => {
               // Clear any existing metrics data
               return {
                 ...node,
                 data: {
                   ...node.data,
                   color: node.data.color || "#ffffff",
-                  colors: node.data.colors || ['#ffffff'],
+                  colors: node.data.colors || ["#ffffff"],
                   theory: importedData.theory,
                   label: node.data.label || "",
                   metrics: null,
-                  selectedMetric: null
-                }
+                  selectedMetric: null,
+                },
               };
             });
 
             // Switch to the imported theory
             setSelectedTheory(importedData.theory);
-            
+
             // Update current view with processed nodes
             setNodes(processedNodes);
             setEdges(importedData.edges);
@@ -1002,27 +1173,29 @@ export default function App() {
             setNetworkMetrics(null);
 
             // Update theory networks state
-            setTheoryNetworks(prev => ({
+            setTheoryNetworks((prev) => ({
               ...prev,
               [importedData.theory]: {
                 nodes: processedNodes,
-                edges: importedData.edges
-              }
+                edges: importedData.edges,
+              },
             }));
 
             // Update localStorage
-            localStorage.setItem('theoryNetworks', JSON.stringify({
-              ...theoryNetworks,
-              [importedData.theory]: {
-                nodes: processedNodes,
-                edges: importedData.edges
-              }
-            }));
-            localStorage.setItem('selectedTheory', importedData.theory);
-
+            localStorage.setItem(
+              "theoryNetworks",
+              JSON.stringify({
+                ...theoryNetworks,
+                [importedData.theory]: {
+                  nodes: processedNodes,
+                  edges: importedData.edges,
+                },
+              })
+            );
+            localStorage.setItem("selectedTheory", importedData.theory);
           } catch (error) {
-            console.error('Error importing map:', error);
-            alert('Error importing map. Please check the file format.');
+            console.error("Error importing map:", error);
+            alert("Error importing map. Please check the file format.");
           }
         };
         reader.readAsText(file);
@@ -1035,15 +1208,20 @@ export default function App() {
   const analyzeNetwork = () => {
     const metrics = calculateNetworkMetrics(nodes, edges);
     setNetworkMetrics(metrics);
-    
+
     // Update nodes to include metrics data
-    const newNodes = nodes.map(node => ({
+    const newNodes = nodes.map((node) => ({
       ...node,
       data: {
         ...node.data,
-        metrics: metrics.nodeMetrics[node.id],
-        selectedMetric: selectedMetric
-      }
+        metrics: metrics.nodeMetrics[node.id] || {
+          PageRank: 0,
+          LRC: 0,
+          LRC_NX: 0,
+          "Betweenness Centrality": 0,
+        },
+        selectedMetric: selectedMetric,
+      },
     }));
 
     setNodes(newNodes);
@@ -1057,28 +1235,30 @@ export default function App() {
     return (
       <div
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: 60,
           right: 10,
           zIndex: 10,
-          backgroundColor: 'white',
-          padding: '10px',
-          borderRadius: '6px',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-          maxWidth: '250px',
+          backgroundColor: "white",
+          padding: "10px",
+          borderRadius: "6px",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+          maxWidth: "250px",
         }}
       >
-        <h3 style={{ margin: '0 0 10px 0', fontSize: '14px' }}>Network Metrics</h3>
+        <h3 style={{ margin: "0 0 10px 0", fontSize: "14px" }}>
+          Network Metrics
+        </h3>
         <select
           value={selectedMetric}
           onChange={(e) => {
             setSelectedMetric(e.target.value);
           }}
           style={{
-            width: '100%',
-            marginBottom: '10px',
-            padding: '4px',
-            fontSize: '12px'
+            width: "100%",
+            marginBottom: "10px",
+            padding: "4px",
+            fontSize: "12px",
           }}
         >
           <option value="PageRank">PageRank</option>
@@ -1086,17 +1266,21 @@ export default function App() {
           <option value="LRC_NX">LRC (NetworkX)</option>
           <option value="Betweenness Centrality">Betweenness Centrality</option>
         </select>
-        <div style={{ fontSize: '12px' }}>
-          <p><strong>Nodes:</strong> {networkMetrics.globalMetrics.networkSize}</p>
-          <p><strong>Edges:</strong> {networkMetrics.globalMetrics.edgeCount}</p>
+        <div style={{ fontSize: "12px" }}>
+          <p>
+            <strong>Nodes:</strong> {networkMetrics.globalMetrics.networkSize}
+          </p>
+          <p>
+            <strong>Edges:</strong> {networkMetrics.globalMetrics.edgeCount}
+          </p>
         </div>
         <button
           onClick={() => setShowMetrics(false)}
           style={{
-            padding: '4px 8px',
-            fontSize: '12px',
-            marginTop: '10px',
-            cursor: 'pointer'
+            padding: "4px 8px",
+            fontSize: "12px",
+            marginTop: "10px",
+            cursor: "pointer",
           }}
         >
           Close
@@ -1104,6 +1288,78 @@ export default function App() {
       </div>
     );
   };
+
+  // Custom node change handler with grid snapping
+  const handleNodesChange = useCallback(
+    (changes) => {
+      onNodesChange(changes);
+
+      // After the default node changes are applied, handle grid snapping
+      changes.forEach((change) => {
+        if (change.type === "position" && change.dragging === false) {
+          setNodes((nds) =>
+            nds.map((node) => {
+              if (node.id === change.id) {
+                // Snap the node to the nearest grid position
+                const snappedPosition = snapToGrid(node.position);
+                return {
+                  ...node,
+                  position: snappedPosition,
+                };
+              }
+              return node;
+            })
+          );
+        }
+      });
+    },
+    [onNodesChange, setNodes]
+  );
+
+  // Add visual grid helper
+  const CustomBackground = () => (
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        pointerEvents: "none",
+        zIndex: -1,
+      }}
+    >
+      <svg
+        style={{
+          width: "100%",
+          height: "100%",
+          position: "absolute",
+          top: 0,
+          left: 0,
+        }}
+      >
+        <defs>
+          <pattern
+            id="grid"
+            width={GRID_SIZE.HORIZONTAL_GAP}
+            height={GRID_SIZE.VERTICAL_GAP}
+            patternUnits="userSpaceOnUse"
+          >
+            <rect
+              width={GRID_SIZE.HORIZONTAL_GAP}
+              height={GRID_SIZE.VERTICAL_GAP}
+              fill="none"
+              stroke="#ddd"
+              strokeWidth="1"
+              strokeDasharray="4 4"
+              opacity="0.5" // Increased from 0.3 to 0.5 for better visibility
+            />
+          </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)" />
+      </svg>
+    </div>
+  );
 
   return (
     <div style={{ height: "100vh", width: "100%" }}>
@@ -1124,19 +1380,19 @@ export default function App() {
             gap: "8px",
           }}
         >
-          <label 
-            htmlFor="theory-select" 
-            style={{ 
-              fontSize: "11px", 
+          <label
+            htmlFor="theory-select"
+            style={{
+              fontSize: "11px",
               fontWeight: "bold",
               color: "#666",
             }}
           >
             Select Theory:
           </label>
-          <select 
+          <select
             id="theory-select"
-            value={selectedTheory} 
+            value={selectedTheory}
             onChange={(e) => changeTheory(e.target.value)}
             style={{
               padding: "4px",
@@ -1155,6 +1411,7 @@ export default function App() {
             <option value="GNW">GNW</option>
             <option value="IIT">IIT</option>
             <option value="HOT">HOT</option>
+            <option value="other">other</option>
           </select>
         </div>
 
@@ -1174,7 +1431,7 @@ export default function App() {
             width: "130px",
           }}
         >
-          <button 
+          <button
             onClick={addNewBox}
             style={{
               padding: "4px 8px",
@@ -1189,7 +1446,7 @@ export default function App() {
           >
             Add New Claim
           </button>
-          <button 
+          <button
             onClick={resetLayout}
             style={{
               padding: "4px 8px",
@@ -1204,7 +1461,7 @@ export default function App() {
           >
             Reset Layout
           </button>
-          <button 
+          <button
             onClick={exportNetwork}
             style={{
               padding: "4px 8px",
@@ -1219,7 +1476,7 @@ export default function App() {
           >
             Download
           </button>
-          <button 
+          <button
             onClick={importNetwork}
             style={{
               padding: "4px 8px",
@@ -1234,7 +1491,7 @@ export default function App() {
           >
             Load Map
           </button>
-          <button 
+          <button
             onClick={analyzeNetwork}
             style={{
               padding: "4px 8px",
@@ -1254,7 +1511,7 @@ export default function App() {
         <ReactFlow
           nodes={nodes}
           edges={edges}
-          onNodesChange={onNodesChange}
+          onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
           fitView
@@ -1263,18 +1520,45 @@ export default function App() {
           connectOnClick={true}
           defaultEdgeOptions={{
             type: "smoothstep",
-            style: { strokeWidth: 2.5 },
+            style: {
+              strokeWidth: 3.5,
+              stroke: "#2a2a2a",
+              opacity: 0.9,
+            },
             markerEnd: {
               type: MarkerType.ArrowClosed,
-              width: 20,
-              height: 20,
-              color: "#222",
+              width: 30,
+              height: 30,
+              color: "#2a2a2a",
             },
           }}
+          snapToGrid={true}
+          snapGrid={[GRID_SIZE.HORIZONTAL_GAP, GRID_SIZE.VERTICAL_GAP]}
         >
-          <MiniMap />
-          <Controls />
-          <Background />
+          <CustomBackground />
+          <MiniMap
+            nodeColor={(node) => {
+              return node.data?.colors?.[0] || "#ffffff";
+            }}
+            maskColor="rgba(255, 255, 255, 0.8)"
+            style={{
+              backgroundColor: "#f8f8f8",
+              border: "1px solid #ddd",
+            }}
+          />
+          <Controls
+            style={{
+              button: {
+                backgroundColor: "#ffffff",
+                border: "1px solid #ddd",
+                color: "#333",
+              },
+              buttonActive: {
+                backgroundColor: "#f0f0f0",
+              },
+            }}
+          />
+          <Background color="#aaa" gap={16} />
         </ReactFlow>
 
         <MetricsPanel />
