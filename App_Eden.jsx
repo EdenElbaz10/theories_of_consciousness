@@ -184,7 +184,6 @@ const getInitialNodes = (theory) => {
   }
 
   return theoryClaims[theory].map((text, i) => {
-    // Calculate position with maximum 10 nodes per column
     const column = Math.floor(i / 10);
     const row = i % 10;
     return {
@@ -192,18 +191,17 @@ const getInitialNodes = (theory) => {
       type: "custom",
       data: { 
         label: text, 
-        color: "#ffffff",
+        colors: ['#ffffff'],
         theory: theory
       },
       position: {
-        x: 50 + column * 250, // Reduced spacing between columns (was 300)
-        y: 50 + row * 130,    // Slightly increased spacing between rows (was 120)
+        x: 50 + column * 250,
+        y: 50 + row * 130,
       },
     };
   });
 };
 
-// Function to get initial or stored network state
 const getInitialNetworkState = () => {
   try {
     const storedNetworks = localStorage.getItem('theoryNetworks');
@@ -224,18 +222,35 @@ const getInitialNetworkState = () => {
 };
 
 const CustomNode = ({ id, data, selected }) => {
-  const [color, setColor] = useState(data.color || "#ffffff");
+  const [colors, setColors] = useState(data.colors || ['#ffffff']);
   const [isEditing, setIsEditing] = useState(false);
   const [label, setLabel] = useState(data.label);
 
   useEffect(() => {
-    setColor(data.color || "#ffffff");
-  }, [data.color]);
+    setColors(data.colors || ['#ffffff']);
+  }, [data.colors]);
 
-  const onChangeColor = (e) => {
-    const newColor = e.target.value;
-    setColor(newColor);
-    window.updateNodeColor(id, newColor);
+  const onChangeColor = (index, newColor) => {
+    const newColors = [...colors];
+    newColors[index] = newColor;
+    setColors(newColors);
+    window.updateNodeColors(id, newColors);
+  };
+
+  const addColor = () => {
+    if (colors.length < 4) { // Limit to 4 colors maximum
+      const newColors = [...colors, '#ffffff'];
+      setColors(newColors);
+      window.updateNodeColors(id, newColors);
+    }
+  };
+
+  const removeColor = (index) => {
+    if (colors.length > 1) { // Maintain minimum 1 color
+      const newColors = colors.filter((_, i) => i !== index);
+      setColors(newColors);
+      window.updateNodeColors(id, newColors);
+    }
   };
 
   const onDoubleClick = () => {
@@ -277,13 +292,37 @@ const CustomNode = ({ id, data, selected }) => {
     </div>
   ) : null;
 
+  // Create gradient background style
+  const gradientStyle = {
+    background: colors.length > 1 
+      ? `linear-gradient(45deg, ${colors.join(', ')})`
+      : colors[0],
+  };
+
+  // Define handle positions
+  const handles = [
+    // Top handles
+    { id: 'top-left', position: Position.Top, style: { left: '25%' } },
+    { id: 'top-center', position: Position.Top, style: { left: '50%' } },
+    { id: 'top-right', position: Position.Top, style: { left: '75%' } },
+    
+    // Bottom handles
+    { id: 'bottom-left', position: Position.Bottom, style: { left: '25%' } },
+    { id: 'bottom-center', position: Position.Bottom, style: { left: '50%' } },
+    { id: 'bottom-right', position: Position.Bottom, style: { left: '75%' } },
+    
+    // Side handles
+    { id: 'left', position: Position.Left, style: { top: '50%' } },
+    { id: 'right', position: Position.Right, style: { top: '50%' } }
+  ];
+
   return (
     <div
       style={{
         border: `2px solid ${isNewBox ? "#4CAF50" : "#333"}`,
         borderRadius: 8,
         padding: "2px 8px",
-        background: color,
+        ...gradientStyle,
         width: 220,
         minHeight: 100,
         fontSize: 12,
@@ -299,21 +338,19 @@ const CustomNode = ({ id, data, selected }) => {
       onDoubleClick={onDoubleClick}
     >
       {metricCircle}
-      {["Top", "Right", "Bottom", "Left"].map((pos) => (
+      {handles.map((handle) => (
         <Handle
-          key={pos}
+          key={handle.id}
+          id={handle.id}
           type="source"
-          position={Position[pos]}
-          id={pos.toLowerCase()}
+          position={handle.position}
           isConnectable={true}
           style={{
             background: "#666",
             width: "8px",
             height: "8px",
             border: "2px solid #fff",
-            ...(pos === "Top" || pos === "Bottom"
-              ? { left: "50%" }
-              : { top: "50%" }),
+            ...handle.style
           }}
         />
       ))}
@@ -348,13 +385,44 @@ const CustomNode = ({ id, data, selected }) => {
         </div>
       )}
       {selected && (
-        <input
-          type="color"
-          value={color}
-          onChange={onChangeColor}
-          style={{ marginTop: 6 }}
-          className="nodrag"
-        />
+        <div style={{ marginTop: 6 }} className="nodrag">
+          {colors.map((color, index) => (
+            <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+              <input
+                type="color"
+                value={color}
+                onChange={(e) => onChangeColor(index, e.target.value)}
+                style={{ marginRight: 4 }}
+              />
+              {colors.length > 1 && (
+                <button
+                  onClick={() => removeColor(index)}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '10px',
+                    marginLeft: 4,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ×
+                </button>
+              )}
+            </div>
+          ))}
+          {colors.length < 4 && (
+            <button
+              onClick={addColor}
+              style={{
+                padding: '2px 6px',
+                fontSize: '10px',
+                marginTop: 4,
+                cursor: 'pointer',
+              }}
+            >
+              + Add Color
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
@@ -363,7 +431,7 @@ const CustomNode = ({ id, data, selected }) => {
 const nodeTypes = { custom: CustomNode };
 
 const calculateNetworkMetrics = (nodes, edges) => {
-  // First, identify connected nodes (nodes with at least one edge)
+  // Identify connected nodes (nodes with at least one edge)
   const connectedNodeIds = new Set();
   edges.forEach(edge => {
     connectedNodeIds.add(edge.source);
@@ -391,12 +459,12 @@ const calculateNetworkMetrics = (nodes, edges) => {
 
   // Calculate PageRank
   const calculatePageRank = () => {
-    const d = 0.85; // damping factor (alpha in NetworkX)
-    const epsilon = 1e-6; // NetworkX's default tolerance
-    const maxIter = 100; // NetworkX's default max_iter
+    const d = 0.85; // damping factor
+    const epsilon = 1e-6;
+    const maxIter = 100;
     let pagerank = {};
     
-    // Initialize PageRank values for all nodes (1/N)
+    // Initialize PageRank values for connected nodes only
     connectedNodes.forEach(node => pagerank[node.id] = 1/N);
     
     // Get dangling nodes (nodes with no outgoing edges)
@@ -404,22 +472,17 @@ const calculateNetworkMetrics = (nodes, edges) => {
       .filter(node => !adjacencyMap[node.id] || adjacencyMap[node.id].length === 0)
       .map(node => node.id);
 
-    // Iterate until convergence
     for (let iter = 0; iter < maxIter; iter++) {
       let newPagerank = {};
       let danglingSum = 0;
       
-      // Calculate dangling sum
       danglingNodes.forEach(nodeId => {
         danglingSum += pagerank[nodeId];
       });
 
-      // Update PageRank values
       connectedNodes.forEach(node => {
-        // Initialize with damping factor distribution
         let sum = 0;
         
-        // Add contribution of incoming edges
         edges.forEach(edge => {
           if (edge.target === node.id) {
             const sourceOutDegree = adjacencyMap[edge.source] ? adjacencyMap[edge.source].length : 0;
@@ -429,12 +492,10 @@ const calculateNetworkMetrics = (nodes, edges) => {
           }
         });
 
-        // Calculate new PageRank value
         newPagerank[node.id] = ((1 - d) / N) + 
                               d * (sum + (danglingSum / N));
       });
 
-      // Check for convergence
       let diff = 0;
       connectedNodes.forEach(node => {
         diff += Math.abs(newPagerank[node.id] - pagerank[node.id]);
@@ -442,12 +503,9 @@ const calculateNetworkMetrics = (nodes, edges) => {
       
       pagerank = {...newPagerank};
       
-      if (diff < epsilon) {
-        break;
-      }
+      if (diff < epsilon) break;
     }
 
-    // Normalize to sum to 1
     let totalRank = Object.values(pagerank).reduce((a, b) => a + b, 0);
     Object.keys(pagerank).forEach(nodeId => {
       pagerank[nodeId] = pagerank[nodeId] / totalRank;
@@ -461,7 +519,6 @@ const calculateNetworkMetrics = (nodes, edges) => {
     const lrc = {};
     
     connectedNodes.forEach(node => {
-      // Implement single_source_shortest_path_length
       const distances = {};
       const queue = [[node.id, 0]];
       const visited = new Set();
@@ -482,7 +539,6 @@ const calculateNetworkMetrics = (nodes, edges) => {
         }
       }
       
-      // Calculate LRC value
       let sum = 0;
       Object.entries(distances).forEach(([target, dist]) => {
         if (dist > 0) {
@@ -496,7 +552,7 @@ const calculateNetworkMetrics = (nodes, edges) => {
     return lrc;
   };
 
-  // Calculate LRC_NX (NetworkX's implementation)
+  // Calculate LRC_NX
   const calculateLRC_NX = () => {
     const lrc_nx = {};
     
@@ -532,9 +588,7 @@ const calculateNetworkMetrics = (nodes, edges) => {
     const betweenness = {};
     connectedNodes.forEach(node => betweenness[node.id] = 0);
 
-    // For each pair of nodes
     connectedNodes.forEach(source => {
-      // Implement Brandes' algorithm
       const stack = [];
       const predecessors = {};
       const sigma = {};
@@ -558,12 +612,10 @@ const calculateNetworkMetrics = (nodes, edges) => {
         
         if (adjacencyMap[v]) {
           adjacencyMap[v].forEach(w => {
-            // Path discovery
             if (distance[w] < 0) {
               queue.push(w);
               distance[w] = distance[v] + 1;
             }
-            // Path counting
             if (distance[w] === distance[v] + 1) {
               sigma[w] += sigma[v];
               predecessors[w].push(v);
@@ -572,7 +624,6 @@ const calculateNetworkMetrics = (nodes, edges) => {
         }
       }
 
-      // Accumulation
       while (stack.length > 0) {
         const w = stack.pop();
         predecessors[w].forEach(v => {
@@ -584,7 +635,6 @@ const calculateNetworkMetrics = (nodes, edges) => {
       }
     });
 
-    // Normalize
     const scale = (N - 1) * (N - 2);
     if (scale > 0) {
       connectedNodes.forEach(node => {
@@ -601,11 +651,10 @@ const calculateNetworkMetrics = (nodes, edges) => {
   const lrc_nx = calculateLRC_NX();
   const betweenness = calculateBetweenness();
 
-  // Initialize metrics for all nodes (including unconnected ones)
+  // Initialize metrics only for connected nodes
   const nodeMetrics = {};
   nodes.forEach(node => {
     if (connectedNodeIds.has(node.id)) {
-      // For connected nodes, use calculated metrics
       nodeMetrics[node.id] = {
         'PageRank': pagerank[node.id],
         'LRC': lrc[node.id],
@@ -613,20 +662,15 @@ const calculateNetworkMetrics = (nodes, edges) => {
         'Betweenness Centrality': betweenness[node.id]
       };
     } else {
-      // For unconnected nodes, set all metrics to 0
-      nodeMetrics[node.id] = {
-        'PageRank': 0,
-        'LRC': 0,
-        'LRC_NX': 0,
-        'Betweenness Centrality': 0
-      };
+      // For unconnected nodes, don't include them in the metrics
+      nodeMetrics[node.id] = null;
     }
   });
 
   return {
     nodeMetrics,
     globalMetrics: {
-      networkSize: N,
+      networkSize: N, // Only count connected nodes
       edgeCount: edges.length
     }
   };
@@ -674,7 +718,7 @@ export default function App() {
 
   // Update window functions for node manipulation
   useEffect(() => {
-    window.updateNodeColor = (id, newColor) => {
+    window.updateNodeColors = (id, newColors) => {
       setNodes((nds) =>
         nds.map((n) =>
           n.id === id 
@@ -682,7 +726,7 @@ export default function App() {
                 ...n, 
                 data: { 
                   ...n.data, 
-                  color: newColor 
+                  colors: newColors 
                 } 
               } 
             : n
@@ -805,7 +849,7 @@ export default function App() {
       type: "custom",
       data: { 
         label: "Double click to edit", 
-        color: "#ffffff",
+        colors: ['#ffffff'],
         theory: selectedTheory
       },
       position: {
@@ -846,19 +890,22 @@ export default function App() {
   const exportNetwork = () => {
     const currentNetwork = theoryNetworks[selectedTheory];
     
-    // Ensure all node data including colors is properly exported
-    const nodesWithColors = currentNetwork.nodes.map(node => ({
+    // Clean up nodes before export by removing metrics data
+    const cleanedNodes = currentNetwork.nodes.map(node => ({
       ...node,
       data: {
         ...node.data,
+        metrics: null,
+        selectedMetric: null,
         color: node.data.color || "#ffffff",
+        colors: node.data.colors || ['#ffffff'],
         theory: selectedTheory
       }
     }));
 
     const data = JSON.stringify({ 
       theory: selectedTheory,
-      nodes: nodesWithColors,
+      nodes: cleanedNodes,
       edges: currentNetwork.edges,
       exportDate: new Date().toISOString(),
       version: "1.0"
@@ -892,14 +939,15 @@ export default function App() {
               return;
             }
 
-            // Process nodes to ensure all data is properly structured and clear metrics
+            // Process nodes to ensure all data is properly structured
             const processedNodes = importedData.nodes.map(node => {
-              // Ensure node has all required properties and clear metrics
+              // Clear any existing metrics data
               return {
                 ...node,
                 data: {
                   ...node.data,
                   color: node.data.color || "#ffffff",
+                  colors: node.data.colors || ['#ffffff'],
                   theory: importedData.theory,
                   label: node.data.label || "",
                   metrics: null,
@@ -915,6 +963,7 @@ export default function App() {
             setNodes(processedNodes);
             setEdges(importedData.edges);
             setShowMetrics(false);
+            setNetworkMetrics(null);
 
             // Update theory networks state
             setTheoryNetworks(prev => ({
@@ -965,7 +1014,7 @@ export default function App() {
     setShowMetrics(true);
   };
 
-  // Add this component for the metrics panel
+  // Modify the MetricsPanel component to only show connected nodes
   const MetricsPanel = () => {
     if (!showMetrics || !networkMetrics) return null;
 
@@ -1023,7 +1072,6 @@ export default function App() {
   return (
     <div style={{ height: "100vh", width: "100%" }}>
       <ReactFlowProvider>
-        {/* Theory selector in top middle */}
         <div
           style={{
             position: "absolute",
@@ -1074,7 +1122,6 @@ export default function App() {
           </select>
         </div>
 
-        {/* Action buttons in top-right */}
         <div
           style={{
             position: "absolute",
@@ -1168,9 +1215,6 @@ export default function App() {
           </button>
         </div>
 
-        {/* Add the metrics panel */}
-        <MetricsPanel />
-
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -1196,6 +1240,8 @@ export default function App() {
           <Controls />
           <Background />
         </ReactFlow>
+
+        <MetricsPanel />
       </ReactFlowProvider>
     </div>
   );
