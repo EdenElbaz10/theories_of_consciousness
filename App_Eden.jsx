@@ -1,4 +1,4 @@
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useState, useEffect, useMemo } from "react";
 import ReactFlow, {
   addEdge,
   Background,
@@ -220,215 +220,6 @@ const getInitialNetworkState = () => {
     HOT: { nodes: getInitialNodes("HOT"), edges: [] },
   };
 };
-
-const CustomNode = ({ id, data, selected }) => {
-  const [colors, setColors] = useState(data.colors || ['#ffffff']);
-  const [isEditing, setIsEditing] = useState(false);
-  const [label, setLabel] = useState(data.label);
-
-  useEffect(() => {
-    setColors(data.colors || ['#ffffff']);
-  }, [data.colors]);
-
-  const onChangeColor = (index, newColor) => {
-    const newColors = [...colors];
-    newColors[index] = newColor;
-    setColors(newColors);
-    window.updateNodeColors(id, newColors);
-  };
-
-  const addColor = () => {
-    if (colors.length < 4) { // Limit to 4 colors maximum
-      const newColors = [...colors, '#ffffff'];
-      setColors(newColors);
-      window.updateNodeColors(id, newColors);
-    }
-  };
-
-  const removeColor = (index) => {
-    if (colors.length > 1) { // Maintain minimum 1 color
-      const newColors = colors.filter((_, i) => i !== index);
-      setColors(newColors);
-      window.updateNodeColors(id, newColors);
-    }
-  };
-
-  const onDoubleClick = () => {
-    setIsEditing(true);
-  };
-
-  const onBlur = () => {
-    setIsEditing(false);
-    window.updateNodeLabel(id, label);
-  };
-
-  const isNewBox = !Object.values(theoryClaims).some(claims => 
-    claims.includes(data.label)
-  );
-
-  // Add metric circle if metrics data is available
-  const metricCircle = data.metrics && data.selectedMetric ? (
-    <div
-      style={{
-        position: "absolute",
-        top: "-25px",
-        right: "-25px",
-        width: "40px",
-        height: "40px",
-        borderRadius: "50%",
-        backgroundColor: `rgb(0, ${Math.floor(150 + (data.metrics[data.selectedMetric] * 100))}, 255)`,
-        color: "white",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "11px",
-        fontWeight: "bold",
-        border: "2px solid white",
-        boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-        zIndex: 10
-      }}
-    >
-      {data.metrics[data.selectedMetric].toFixed(2)}
-    </div>
-  ) : null;
-
-  // Create gradient background style
-  const gradientStyle = {
-    background: colors.length > 1 
-      ? `linear-gradient(45deg, ${colors.join(', ')})`
-      : colors[0],
-  };
-
-  // Define handle positions
-  const handles = [
-    // Top handles
-    { id: 'top-left', position: Position.Top, style: { left: '25%' } },
-    { id: 'top-center', position: Position.Top, style: { left: '50%' } },
-    { id: 'top-right', position: Position.Top, style: { left: '75%' } },
-    
-    // Bottom handles
-    { id: 'bottom-left', position: Position.Bottom, style: { left: '25%' } },
-    { id: 'bottom-center', position: Position.Bottom, style: { left: '50%' } },
-    { id: 'bottom-right', position: Position.Bottom, style: { left: '75%' } },
-    
-    // Side handles
-    { id: 'left', position: Position.Left, style: { top: '50%' } },
-    { id: 'right', position: Position.Right, style: { top: '50%' } }
-  ];
-
-  return (
-    <div
-      style={{
-        border: `2px solid ${isNewBox ? "#4CAF50" : "#333"}`,
-        borderRadius: 8,
-        padding: "2px 8px",
-        ...gradientStyle,
-        width: 220,
-        minHeight: 100,
-        fontSize: 12,
-        position: "relative",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-        textAlign: "center",
-        boxShadow: isNewBox ? "0 2px 4px rgba(0,0,0,0.2)" : "none",
-        fontFamily: "Calibri, sans-serif",
-      }}
-      onDoubleClick={onDoubleClick}
-    >
-      {metricCircle}
-      {handles.map((handle) => (
-        <Handle
-          key={handle.id}
-          id={handle.id}
-          type="source"
-          position={handle.position}
-          isConnectable={true}
-          style={{
-            background: "#666",
-            width: "8px",
-            height: "8px",
-            border: "2px solid #fff",
-            ...handle.style
-          }}
-        />
-      ))}
-      {isEditing ? (
-        <textarea
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          onBlur={onBlur}
-          autoFocus
-          style={{
-            width: "90%",
-            height: "80px",
-            padding: "5px",
-            resize: "none",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            fontSize: "12px",
-            fontFamily: "Calibri, sans-serif",
-            fontWeight: isNewBox ? "bold" : "normal",
-          }}
-          className="nodrag"
-        />
-      ) : (
-        <div
-          style={{
-            fontSize: "12px",
-            fontFamily: "Calibri, sans-serif",
-            fontWeight: isNewBox ? "bold" : "normal",
-          }}
-        >
-          {label}
-        </div>
-      )}
-      {selected && (
-        <div style={{ marginTop: 6 }} className="nodrag">
-          {colors.map((color, index) => (
-            <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => onChangeColor(index, e.target.value)}
-                style={{ marginRight: 4 }}
-              />
-              {colors.length > 1 && (
-                <button
-                  onClick={() => removeColor(index)}
-                  style={{
-                    padding: '2px 6px',
-                    fontSize: '10px',
-                    marginLeft: 4,
-                    cursor: 'pointer',
-                  }}
-                >
-                  ×
-                </button>
-              )}
-            </div>
-          ))}
-          {colors.length < 4 && (
-            <button
-              onClick={addColor}
-              style={{
-                padding: '2px 6px',
-                fontSize: '10px',
-                marginTop: 4,
-                cursor: 'pointer',
-              }}
-            >
-              + Add Color
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-};
-
-const nodeTypes = { custom: CustomNode };
 
 const calculateNetworkMetrics = (nodes, edges) => {
   // Identify connected nodes (nodes with at least one edge)
@@ -684,10 +475,255 @@ export default function App() {
   const [theoryNetworks, setTheoryNetworks] = useState(getInitialNetworkState);
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-
   const [selectedMetric, setSelectedMetric] = useState('PageRank');
   const [showMetrics, setShowMetrics] = useState(false);
   const [networkMetrics, setNetworkMetrics] = useState(null);
+  const [copiedColors, setCopiedColors] = useState(null);
+
+  const CustomNode = ({ id, data, selected, copiedColors, setCopiedColors }) => {
+    const [colors, setColors] = useState(data.colors || ['#ffffff']);
+    const [isEditing, setIsEditing] = useState(false);
+    const [label, setLabel] = useState(data.label);
+
+    useEffect(() => {
+      setColors(data.colors || ['#ffffff']);
+    }, [data.colors]);
+
+    const onChangeColor = (index, newColor) => {
+      const newColors = [...colors];
+      newColors[index] = newColor;
+      setColors(newColors);
+      window.updateNodeColors(id, newColors);
+    };
+
+    const addColor = () => {
+      if (colors.length < 4) {
+        const newColors = [...colors, '#ffffff'];
+        setColors(newColors);
+        window.updateNodeColors(id, newColors);
+      }
+    };
+
+    const removeColor = (index) => {
+      if (colors.length > 1) {
+        const newColors = colors.filter((_, i) => i !== index);
+        setColors(newColors);
+        window.updateNodeColors(id, newColors);
+      }
+    };
+
+    const copyColors = () => {
+      setCopiedColors([...colors]);
+    };
+
+    const pasteColors = () => {
+      if (copiedColors) {
+        setColors([...copiedColors]);
+        window.updateNodeColors(id, copiedColors);
+      }
+    };
+
+    // Create gradient background style
+    const gradientStyle = {
+      background: colors.length > 1 
+        ? `linear-gradient(45deg, ${colors.join(', ')})`
+        : colors[0],
+    };
+
+    const isNewBox = !Object.values(theoryClaims).some(claims => 
+      claims.includes(data.label)
+    );
+
+    // Add metric circle if metrics data is available
+    const metricCircle = data.metrics && data.selectedMetric ? (
+      <div
+        style={{
+          position: "absolute",
+          top: "-25px",
+          right: "-25px",
+          width: "40px",
+          height: "40px",
+          borderRadius: "50%",
+          backgroundColor: `rgb(0, ${Math.floor(150 + (data.metrics[data.selectedMetric] * 100))}, 255)`,
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "11px",
+          fontWeight: "bold",
+          border: "2px solid white",
+          boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+          zIndex: 10
+        }}
+      >
+        {data.metrics[data.selectedMetric].toFixed(2)}
+      </div>
+    ) : null;
+
+    // Define handle positions
+    const handles = [
+      // Top handles
+      { id: 'top-left', position: Position.Top, style: { left: '25%' } },
+      { id: 'top-center', position: Position.Top, style: { left: '50%' } },
+      { id: 'top-right', position: Position.Top, style: { left: '75%' } },
+      
+      // Bottom handles
+      { id: 'bottom-left', position: Position.Bottom, style: { left: '25%' } },
+      { id: 'bottom-center', position: Position.Bottom, style: { left: '50%' } },
+      { id: 'bottom-right', position: Position.Bottom, style: { left: '75%' } },
+      
+      // Side handles
+      { id: 'left', position: Position.Left, style: { top: '50%' } },
+      { id: 'right', position: Position.Right, style: { top: '50%' } }
+    ];
+
+    return (
+      <div
+        style={{
+          border: `2px solid ${isNewBox ? "#4CAF50" : "#333"}`,
+          borderRadius: 8,
+          padding: "2px 8px",
+          ...gradientStyle,
+          width: 220,
+          minHeight: 100,
+          fontSize: 12,
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          flexDirection: "column",
+          textAlign: "center",
+          boxShadow: isNewBox ? "0 2px 4px rgba(0,0,0,0.2)" : "none",
+          fontFamily: "Calibri, sans-serif",
+        }}
+        onDoubleClick={() => setIsEditing(true)}
+      >
+        {metricCircle}
+        {handles.map((handle) => (
+          <Handle
+            key={handle.id}
+            id={handle.id}
+            type="source"
+            position={handle.position}
+            isConnectable={true}
+            style={{
+              background: "#666",
+              width: "8px",
+              height: "8px",
+              border: "2px solid #fff",
+              ...handle.style
+            }}
+          />
+        ))}
+        {isEditing ? (
+          <textarea
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            onBlur={() => {
+              setIsEditing(false);
+              window.updateNodeLabel(id, label);
+            }}
+            autoFocus
+            style={{
+              width: "90%",
+              height: "80px",
+              padding: "5px",
+              resize: "none",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              fontSize: "12px",
+              fontFamily: "Calibri, sans-serif",
+              fontWeight: isNewBox ? "bold" : "normal",
+            }}
+            className="nodrag"
+          />
+        ) : (
+          <div
+            style={{
+              fontSize: "12px",
+              fontFamily: "Calibri, sans-serif",
+              fontWeight: isNewBox ? "bold" : "normal",
+            }}
+          >
+            {label}
+          </div>
+        )}
+        {selected && (
+          <div style={{ marginTop: 6 }} className="nodrag">
+            {colors.map((color, index) => (
+              <div key={index} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => onChangeColor(index, e.target.value)}
+                  style={{ marginRight: 4 }}
+                />
+                {colors.length > 1 && (
+                  <button
+                    onClick={() => removeColor(index)}
+                    style={{
+                      padding: '2px 6px',
+                      fontSize: '10px',
+                      marginLeft: 4,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    ×
+                  </button>
+                )}
+              </div>
+            ))}
+            <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+              {colors.length < 4 && (
+                <button
+                  onClick={addColor}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '10px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  + Add Color
+                </button>
+              )}
+              <button
+                onClick={copyColors}
+                style={{
+                  padding: '2px 6px',
+                  fontSize: '10px',
+                  cursor: 'pointer',
+                }}
+              >
+                Copy Colors
+              </button>
+              {copiedColors && (
+                <button
+                  onClick={pasteColors}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '10px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Paste Colors
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const nodeTypes = useMemo(() => ({ 
+    custom: (props) => (
+      <CustomNode 
+        {...props} 
+        copiedColors={copiedColors}
+        setCopiedColors={setCopiedColors}
+      />
+    )
+  }), [copiedColors]);
 
   // Load the selected theory's network
   useEffect(() => {
