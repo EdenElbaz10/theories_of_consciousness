@@ -1401,17 +1401,7 @@ export default function App() {
         <button
           onClick={() => {
             setShowMetrics(false);
-            // Clear metrics display when closing
-            const newNodes = nodes.map((node) => ({
-              ...node,
-              data: {
-                ...node.data,
-                metrics: null,
-                selectedMetric: "None",
-              },
-            }));
-            setNodes(newNodes);
-            setSelectedMetric("None");
+            // Don't reset the metrics when closing
           }}
           style={{
             padding: "4px 8px",
