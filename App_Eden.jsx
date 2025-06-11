@@ -566,10 +566,13 @@ export default function App() {
     return network?.edges || [];
   });
 
-  const [selectedMetric, setSelectedMetric] = useState("PageRank");
+  const [selectedMetric, setSelectedMetric] = useState("None");
   const [showMetrics, setShowMetrics] = useState(false);
   const [networkMetrics, setNetworkMetrics] = useState(null);
   const [copiedColors, setCopiedColors] = useState(null);
+  const [reactFlowInstance, setReactFlowInstance] = useState(null);
+  const [showMiniMap, setShowMiniMap] = useState(true);
+  const [showControls, setShowControls] = useState(true);
 
   const CustomNode = ({
     id,
@@ -632,9 +635,9 @@ export default function App() {
       .filter((claims) => Array.isArray(claims)) // Filter out null values
       .some((claims) => claims.includes(data.label));
 
-    // Add metric circle if metrics data is available
+    // Add metric circle if metrics data exists AND a metric is selected (not "None")
     const metricCircle =
-      data.metrics && data.selectedMetric ? (
+      data.metrics && data.selectedMetric && data.selectedMetric !== "None" ? (
         <div
           style={{
             position: "absolute",
@@ -976,29 +979,31 @@ export default function App() {
     // Get initial node positions
     const initialNodes = getInitialNodes(selectedTheory);
 
-    // Map current nodes to preserve their colors and custom properties, but clear metrics
+    // Map current nodes to preserve their properties, but reset colors to white and clear metrics
     const preservedNodes = nodes.map((existingNode) => {
       // Find the corresponding initial node position
       const initialNode = initialNodes.find((n) => n.id === existingNode.id);
 
       if (initialNode) {
-        // For theory nodes, preserve color but reset position and clear metrics
+        // For theory nodes, reset color to white and reset position
         return {
           ...existingNode,
           position: initialNode.position,
           data: {
             ...existingNode.data,
+            colors: ["#ffffff"],
             metrics: null,
             selectedMetric: null,
           },
         };
       }
 
-      // For custom nodes, keep them at their current position but clear metrics
+      // For custom nodes, keep them at their current position but reset colors
       return {
         ...existingNode,
         data: {
           ...existingNode.data,
+          colors: ["#ffffff"],
           metrics: null,
           selectedMetric: null,
         },
@@ -1209,18 +1214,13 @@ export default function App() {
     const metrics = calculateNetworkMetrics(nodes, edges);
     setNetworkMetrics(metrics);
 
-    // Update nodes to include metrics data
+    // Update nodes to include metrics data but don't show any metric by default
     const newNodes = nodes.map((node) => ({
       ...node,
       data: {
         ...node.data,
-        metrics: metrics.nodeMetrics[node.id] || {
-          PageRank: 0,
-          LRC: 0,
-          LRC_NX: 0,
-          "Betweenness Centrality": 0,
-        },
-        selectedMetric: selectedMetric,
+        metrics: metrics.nodeMetrics[node.id],
+        selectedMetric: "None", // Set to None by default
       },
     }));
 
@@ -1228,7 +1228,120 @@ export default function App() {
     setShowMetrics(true);
   };
 
-  // Modify the MetricsPanel component to only show connected nodes
+  const exportAsPNG = () => {
+    if (!reactFlowInstance) return;
+
+    // Hide the minimap and controls before export
+    setShowMiniMap(false);
+    setShowControls(false);
+
+    // Get all nodes to calculate the content bounds
+    const nodes = reactFlowInstance.getNodes();
+    if (!nodes.length) {
+      setShowMiniMap(true);
+      setShowControls(true);
+      return;
+    }
+
+    // Calculate the bounds of all nodes
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+
+    nodes.forEach((node) => {
+      minX = Math.min(minX, node.position.x);
+      minY = Math.min(minY, node.position.y);
+      maxX = Math.max(maxX, node.position.x + 250);
+      maxY = Math.max(maxY, node.position.y + 150);
+    });
+
+    // Add padding
+    const padding = 50;
+    minX -= padding;
+    minY -= padding;
+    maxX += padding;
+    maxY += padding;
+
+    // Calculate dimensions
+    const width = maxX - minX;
+    const height = maxY - minY;
+
+    // Fit view to include all nodes
+    reactFlowInstance.setViewport({
+      x: -minX,
+      y: -minY,
+      zoom: 1
+    });
+
+    // Small delay to ensure components are hidden
+    setTimeout(() => {
+      // Load dom-to-image from CDN
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js';
+      script.onload = () => {
+        const reactFlowElement = document.querySelector('.react-flow');
+        if (!reactFlowElement) {
+          setShowMiniMap(true);
+          setShowControls(true);
+          return;
+        }
+
+        // Hide ReactFlow attribution before capture
+        const attribution = reactFlowElement.querySelector('.react-flow__attribution');
+        if (attribution) {
+          attribution.style.display = 'none';
+        }
+
+        const scale = 2;
+        const param = {
+          height: height * scale,
+          width: width * scale,
+          quality: 1,
+          style: {
+            transform: 'scale(' + scale + ')',
+            transformOrigin: 'top left',
+            width: width + "px",
+            height: height + "px",
+            backgroundColor: 'white'
+          }
+        };
+
+        window.domtoimage.toPng(reactFlowElement, param)
+          .then((dataUrl) => {
+            const link = document.createElement('a');
+            link.download = `${selectedTheory}_map_${new Date().toISOString().split('T')[0]}.png`;
+            link.href = dataUrl;
+            link.click();
+
+            // Reset viewport and show components after small delay
+            setTimeout(() => {
+              reactFlowInstance.fitView({ padding: 0.2 });
+              setShowMiniMap(true);
+              setShowControls(true);
+              // Show attribution again
+              if (attribution) {
+                attribution.style.display = '';
+              }
+            }, 100);
+          })
+          .catch((error) => {
+            console.error('Error capturing image:', error);
+            // Reset viewport and show components even if there's an error
+            reactFlowInstance.fitView({ padding: 0.2 });
+            setShowMiniMap(true);
+            setShowControls(true);
+            // Show attribution again
+            if (attribution) {
+              attribution.style.display = '';
+            }
+          });
+      };
+      document.body.appendChild(script);
+    }, 100);
+  };
+
+  // Modify the MetricsPanel component
   const MetricsPanel = () => {
     if (!showMetrics || !networkMetrics) return null;
 
@@ -1253,6 +1366,16 @@ export default function App() {
           value={selectedMetric}
           onChange={(e) => {
             setSelectedMetric(e.target.value);
+            // Update nodes to show/hide metrics
+            const newNodes = nodes.map((node) => ({
+              ...node,
+              data: {
+                ...node.data,
+                metrics: networkMetrics.nodeMetrics[node.id],
+                selectedMetric: e.target.value,
+              },
+            }));
+            setNodes(newNodes);
           }}
           style={{
             width: "100%",
@@ -1261,6 +1384,7 @@ export default function App() {
             fontSize: "12px",
           }}
         >
+          <option value="None">None</option>
           <option value="PageRank">PageRank</option>
           <option value="LRC">LRC</option>
           <option value="LRC_NX">LRC (NetworkX)</option>
@@ -1275,7 +1399,20 @@ export default function App() {
           </p>
         </div>
         <button
-          onClick={() => setShowMetrics(false)}
+          onClick={() => {
+            setShowMetrics(false);
+            // Clear metrics display when closing
+            const newNodes = nodes.map((node) => ({
+              ...node,
+              data: {
+                ...node.data,
+                metrics: null,
+                selectedMetric: "None",
+              },
+            }));
+            setNodes(newNodes);
+            setSelectedMetric("None");
+          }}
           style={{
             padding: "4px 8px",
             fontSize: "12px",
@@ -1506,6 +1643,21 @@ export default function App() {
           >
             Analyze
           </button>
+          <button
+            onClick={exportAsPNG}
+            style={{
+              padding: "4px 8px",
+              fontSize: "12px",
+              cursor: "pointer",
+              backgroundColor: "#f0f0f0",
+              border: "1px solid #ccc",
+              borderRadius: "4px",
+              width: "100%",
+              textAlign: "left",
+            }}
+          >
+            Save as PNG
+          </button>
         </div>
 
         <ReactFlow
@@ -1514,6 +1666,7 @@ export default function App() {
           onNodesChange={handleNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={onConnect}
+          onInit={setReactFlowInstance}
           fitView
           nodeTypes={nodeTypes}
           connectionMode="loose"
@@ -1534,30 +1687,35 @@ export default function App() {
           }}
           snapToGrid={true}
           snapGrid={[GRID_SIZE.HORIZONTAL_GAP, GRID_SIZE.VERTICAL_GAP]}
+          proOptions={{ hideAttribution: true }}
         >
           <CustomBackground />
-          <MiniMap
-            nodeColor={(node) => {
-              return node.data?.colors?.[0] || "#ffffff";
-            }}
-            maskColor="rgba(255, 255, 255, 0.8)"
-            style={{
-              backgroundColor: "#f8f8f8",
-              border: "1px solid #ddd",
-            }}
-          />
-          <Controls
-            style={{
-              button: {
-                backgroundColor: "#ffffff",
+          {showMiniMap && (
+            <MiniMap
+              nodeColor={(node) => {
+                return node.data?.colors?.[0] || "#ffffff";
+              }}
+              maskColor="rgba(255, 255, 255, 0.8)"
+              style={{
+                backgroundColor: "#f8f8f8",
                 border: "1px solid #ddd",
-                color: "#333",
-              },
-              buttonActive: {
-                backgroundColor: "#f0f0f0",
-              },
-            }}
-          />
+              }}
+            />
+          )}
+          {showControls && (
+            <Controls
+              style={{
+                button: {
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #ddd",
+                  color: "#333",
+                },
+                buttonActive: {
+                  backgroundColor: "#f0f0f0",
+                },
+              }}
+            />
+          )}
           <Background color="#aaa" gap={16} />
         </ReactFlow>
 
