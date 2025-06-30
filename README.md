@@ -5,8 +5,8 @@ An interactive web-based platform for mapping and analyzing consciousness theori
 ## 🧠 Overview
 
 This platform allows you to:
-- **Visualize** claims from four major consciousness theories (RPT, GNW, IIT, PRM)
-- **Create** custom claims and connections between them
+- **Visualize** prediction maps for consciousness theories
+- **Add** custom claims and connections between them
 - **Analyze** network properties using graph theory metrics
 - **Export** networks for further analysis or presentation
 
