@@ -2,7 +2,7 @@
 
 An interactive web-based platform for mapping and analyzing consciousness theories. Built with React and ReactFlow for academic research and educational purposes.
 
-## 🧠 Overview
+## Overview
 
 This platform allows you to:
 - **Visualize** prediction maps for consciousness theories
@@ -10,7 +10,7 @@ This platform allows you to:
 - **Analyze** network properties using graph theory metrics
 - **Export** networks for further analysis or presentation
 
-## 🎯 Theories Included
+## Theories Included
 
 1. **Recurrent Processing Theory (RPT)**
 
@@ -24,7 +24,7 @@ This platform allows you to:
    - Create your own theory with custom claims
    - Perfect for developing new theoretical frameworks
 
-## ✨ Key Features
+## Key Features
 
 ### 🔗 Connection System
 - **Multiple Connection Points**: 8 connection handles per node (top, bottom, left, right)
@@ -52,7 +52,7 @@ This platform allows you to:
 - **Theory Switching**: Seamless transitions between theories
 
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 - Modern web browser (Chrome, Firefox, Safari, Edge)
@@ -103,6 +103,7 @@ $$\text{Reachability}(i) = \frac{\text{Number of nodes reached by } i}{N-1}$$
 Where $N$ = Total number of nodes.
 
 
+
 ### Local Reaching Centrality (LRC)
 - Quantifies how many other nodes can be reached
 - Accounts for path distance (closer nodes weighted more)
@@ -117,6 +118,7 @@ Where:
 - LRC rewards nodes that can reach others in fewer steps
 
 
+
 ### Betweenness Centrality
 - Measures how often a node lies on the shortest path between two other nodes in the network.
 - High betweenness: the claim acts as a bridge between different parts of the theory.
@@ -127,6 +129,7 @@ $$\text{Betweenness centrality}(i) = \sum_{s \neq i \neq t} \frac{\sigma_{st}(i)
 Where:
 - $\sigma_{st}$ = Total number of shortest paths from source ($s$) to target ($t$)
 - $\sigma_{st}(i)$ = Number of those paths that pass through node $i$
+
 
 
 ### PageRank
