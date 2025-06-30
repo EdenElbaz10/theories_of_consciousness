@@ -135,13 +135,13 @@ const theoryClaims = {
     "ACTIVITY: changes in the state of the PSC units determine changes in CES (and therefore in experience)",
     "Based on introspection, every experience is essentially intrinsic, specific, unitary, definite, and structured = Operationally, the PSC must be a maximum of irreducible, specific, intrinsic c-e power, supporting a CES",
   ],
-  HOT: [
-    "Given background conditions, a first-order state is conscious if it is indexed, via a pointer, by a higher-order state as reliably reflecting the world as it is now",
+  PRM: [
+    "Consciousness corresponds to a higher-order state that is about (re-represents/ points at/asserts that one is in) a first-order state (i.e., automatic inner awareness of one’s own mental states)",
     "If you are not aware of being in a mental state, then there's nothing it is like for you to be in that mental state",
     "There can be a mismatch between higher order states and first order states",
     "Inner awareness should correlate with implicit metacognitive abilities",
     "Function of C is formation of subjectively justified beliefs about the external world (i.e., monitoring reality)",
-    "UC processing can have most of the functional capacities of C processing, without formation of subjectively justified beliefs",
+    "Unconscious processing can have the same functional capacities of conscious processing, without formation of subjectively justified beliefs",
     "Given the right paradigm, discrimination performance should be the same with and without conscious perception",
     "In humans, PFC, held to be involved in metacognitive abilities, is required for higher-order states",
     "Consciousness requires higher-order cognitive states",
@@ -158,17 +158,17 @@ const theoryClaims = {
     "Imagery vividness is modulated by whether the HOS labels an internally generated FOS as more similar to noise or to an external stimulus",
     "A change in the higher-order state should lead to a change in consciousness even if the first-order state remains the same",
     "Manipulating the PFC should induce confusion between perception and imagery",
-    "In humans, PFC is necessary for conscious perception",
-    "Some targeted changes in the prefrontal (and parietal) areas should lead to changes in consciousness",
+    "PFC is necessary for conscious perception",
+    "Changes in the prefrontal (and parietal) areas should lead to changes in consciousness",
     "TMS applied to DLPFC should change subjective report about awareness of a stimulus without affecting task performance",
     "Visual hallucinations can occur if functions of PFC are disrupted (e.g., Schizophrenia, dopaminergic drugs, direct cortical stimulation)",
     "Decodability of inflated perception should be high in later stages of the visual processing hierarchy, not in primary visual cortex",
     "Top-down effects of expectations on inflation should be reflected by timecourses of decodability between frontoparietal and visual areas",
     "TMS stimulation of PFC and lesions should impact subjective reports of consciousness",
-    "Given background conditions, artificial and biological systems with FOS, higher-order mechanisms, and metacognitive abilities are conscious",
-    "Perceptual discrimination performance is driven by first-order states, not higher-order ones",
+    "Artificial and biological systems with proper first-order states, higher-order mechanisms, and metacognitive abilities are conscious",
+    "Task performance is driven by first-order states, not higher-order ones",
     "Inner awareness must discriminate between neural activity due to external stimulus and noise",
-    "HOS relies on averages to track internal noise",
+    "HOS relies on averages to track neuronal excitability",
     "Stimuli presented when neuronal excitability is high should lead to more false alarms and higher visibility/confidence ratings",
   ],
   other: [], // Empty array for other theory
@@ -459,7 +459,7 @@ const calculateNetworkMetrics = (nodes, edges) => {
 export default function App() {
   const [selectedTheory, setSelectedTheory] = useState(() => {
     const stored = localStorage.getItem("selectedTheory");
-    return stored && ["RPT", "GNW", "IIT", "HOT", "other"].includes(stored)
+    return stored && ["RPT", "GNW", "IIT", "PRM", "other"].includes(stored)
       ? stored
       : "RPT";
   });
@@ -513,7 +513,7 @@ export default function App() {
       const storedNetworks = localStorage.getItem("theoryNetworks");
       if (storedNetworks) {
         const parsed = JSON.parse(storedNetworks);
-        const theories = ["RPT", "GNW", "IIT", "HOT", "other"];
+        const theories = ["RPT", "GNW", "IIT", "PRM", "other"];
         const validatedNetworks = {};
 
         theories.forEach((theory) => {
@@ -550,7 +550,7 @@ export default function App() {
       RPT: { nodes: getInitialNodes("RPT"), edges: [] },
       GNW: { nodes: getInitialNodes("GNW"), edges: [] },
       IIT: { nodes: getInitialNodes("IIT"), edges: [] },
-      HOT: { nodes: getInitialNodes("HOT"), edges: [] },
+      PRM: { nodes: getInitialNodes("PRM"), edges: [] },
       other: { nodes: getInitialNodes("other"), edges: [] },
     };
   });
@@ -1271,16 +1271,17 @@ export default function App() {
     reactFlowInstance.setViewport({
       x: -minX,
       y: -minY,
-      zoom: 1
+      zoom: 1,
     });
 
     // Small delay to ensure components are hidden
     setTimeout(() => {
       // Load dom-to-image from CDN
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js';
+      const script = document.createElement("script");
+      script.src =
+        "https://cdnjs.cloudflare.com/ajax/libs/dom-to-image/2.6.0/dom-to-image.min.js";
       script.onload = () => {
-        const reactFlowElement = document.querySelector('.react-flow');
+        const reactFlowElement = document.querySelector(".react-flow");
         if (!reactFlowElement) {
           setShowMiniMap(true);
           setShowControls(true);
@@ -1288,9 +1289,11 @@ export default function App() {
         }
 
         // Hide ReactFlow attribution before capture
-        const attribution = reactFlowElement.querySelector('.react-flow__attribution');
+        const attribution = reactFlowElement.querySelector(
+          ".react-flow__attribution"
+        );
         if (attribution) {
-          attribution.style.display = 'none';
+          attribution.style.display = "none";
         }
 
         const scale = 2;
@@ -1299,18 +1302,21 @@ export default function App() {
           width: width * scale,
           quality: 1,
           style: {
-            transform: 'scale(' + scale + ')',
-            transformOrigin: 'top left',
+            transform: "scale(" + scale + ")",
+            transformOrigin: "top left",
             width: width + "px",
             height: height + "px",
-            backgroundColor: 'white'
-          }
+            backgroundColor: "white",
+          },
         };
 
-        window.domtoimage.toPng(reactFlowElement, param)
+        window.domtoimage
+          .toPng(reactFlowElement, param)
           .then((dataUrl) => {
-            const link = document.createElement('a');
-            link.download = `${selectedTheory}_map_${new Date().toISOString().split('T')[0]}.png`;
+            const link = document.createElement("a");
+            link.download = `${selectedTheory}_map_${
+              new Date().toISOString().split("T")[0]
+            }.png`;
             link.href = dataUrl;
             link.click();
 
@@ -1321,19 +1327,19 @@ export default function App() {
               setShowControls(true);
               // Show attribution again
               if (attribution) {
-                attribution.style.display = '';
+                attribution.style.display = "";
               }
             }, 100);
           })
           .catch((error) => {
-            console.error('Error capturing image:', error);
+            console.error("Error capturing image:", error);
             // Reset viewport and show components even if there's an error
             reactFlowInstance.fitView({ padding: 0.2 });
             setShowMiniMap(true);
             setShowControls(true);
             // Show attribution again
             if (attribution) {
-              attribution.style.display = '';
+              attribution.style.display = "";
             }
           });
       };
@@ -1385,10 +1391,10 @@ export default function App() {
           }}
         >
           <option value="None">None</option>
-          <option value="PageRank">PageRank</option>
+          <option value="LRC_NX">Reachability</option>
           <option value="LRC">LRC</option>
-          <option value="LRC_NX">LRC (NetworkX)</option>
           <option value="Betweenness Centrality">Betweenness Centrality</option>
+          <option value="PageRank">PageRank</option>
         </select>
         <div style={{ fontSize: "12px" }}>
           <p>
@@ -1537,7 +1543,7 @@ export default function App() {
             <option value="RPT">RPT</option>
             <option value="GNW">GNW</option>
             <option value="IIT">IIT</option>
-            <option value="HOT">HOT</option>
+            <option value="PRM">PRM</option>
             <option value="other">other</option>
           </select>
         </div>
