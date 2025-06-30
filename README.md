@@ -12,23 +12,24 @@ This platform allows you to:
 
 ## 🎯 Theories Included
 
-### 1. **Recurrent Processing Theory (RPT)**
+1. **Recurrent Processing Theory (RPT)**
 
+2. **Global Neuronal Workspace (GNW)**
 
-### 2. **Global Neuronal Workspace (GNW)**
+3. **Integrated Information Theory (IIT)**
 
+4. **Predictive Processing Model (PRM)**
 
-### 3. **Integrated Information Theory (IIT)**
-
-
-### 4. **Predictive Processing Model (PRM)**
-
-
-### 5. **Custom Theory**
-- Create your own theory with custom claims
-- Perfect for developing new theoretical frameworks
+5. **Custom Theory**
+   - Create your own theory with custom claims
+   - Perfect for developing new theoretical frameworks
 
 ## ✨ Key Features
+
+### 🔗 Connection System
+- **Multiple Connection Points**: 8 connection handles per node (top, bottom, left, right)
+- **Directed Edges**: Arrows show relationship direction
+
 
 ### 🎨 Interactive Node Management
 - **Color Coding**: Assign up to 4 colors per claim using gradient backgrounds
@@ -36,10 +37,6 @@ This platform allows you to:
 - **Visual Distinction**: Custom claims are highlighted with green borders
 - **Copy/Paste Colors**: Reuse color schemes across multiple claims
 
-### 🔗 Connection System
-- **Multiple Connection Points**: 8 connection handles per node (top, bottom, left, right)
-- **Directed Edges**: Arrows show relationship direction
-- **Visual Feedback**: Smooth animations and clear edge styling
 
 ### 📊 Network Analysis (Color-coded circles display metric values on each node)
 - **PageRank**: Measures node importance based on incoming connections
@@ -53,6 +50,7 @@ This platform allows you to:
 - **Export/Import**: JSON format for sharing and backup
 - **PNG Export**: PNG export for presentations
 - **Theory Switching**: Seamless transitions between theories
+
 
 ## 🚀 Getting Started
 
@@ -99,7 +97,7 @@ This platform allows you to:
 - Simple count of reachable nodes
 - Higher reachability: The nodes are core ideas that affect most of the theory
 
-Formula:
+
 $$\text{Reachability}(i) = \frac{\text{Number of nodes reached by } i}{N-1}$$
 
 Where $N$ = Total number of nodes.
@@ -109,7 +107,7 @@ Where $N$ = Total number of nodes.
 - Quantifies how many other nodes can be reached
 - Accounts for path distance (closer nodes weighted more)
 
-Formula:
+
 $$\text{LRC}(i) = \frac{1}{N-1} \sum_{j \in R(i)} \frac{1}{d_{ij}}$$
 
 Where:
@@ -123,7 +121,7 @@ Where:
 - Measures how often a node lies on the shortest path between two other nodes in the network.
 - High betweenness: the claim acts as a bridge between different parts of the theory.
 
-Formula:
+
 $$\text{Betweenness centrality}(i) = \sum_{s \neq i \neq t} \frac{\sigma_{st}(i)}{\sigma_{st}}$$
 
 Where:
@@ -135,7 +133,7 @@ Where:
 - Measures node importance based on incoming connections
 - High PageRank: the claim is supported by other highly important claims, making it a key part of the theory.
 
-Formula:
+
 $$\text{PR}(i) = \frac{1-d}{N} + d \sum_{j \in \text{Predecessors}(i)} \frac{\text{PR}(j)}{L(j)}$$
 
 Where:
