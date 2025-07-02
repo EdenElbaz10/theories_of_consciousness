@@ -93,12 +93,13 @@ This platform allows you to:
 
 ## 📈 Network Metrics Explained
 
-### Reachability
+### Reach Centrality
+
 - Simple count of reachable nodes
-- Higher reachability: The nodes are core ideas that affect most of the theory
+- Higher Reach Centrality: The nodes are core ideas that affect most of the theory
 
 
-$$\text{Reachability}(i) = \frac{\text{Number of nodes reached by } i}{N-1}$$
+$$\text{Reach Centrality}(i) = \frac{\text{Number of nodes reached by } i}{N-1}$$
 
 Where $N$ = Total number of nodes.
 
@@ -186,4 +187,4 @@ Where:
 
 ---
 
-**For questions or support, please contact: edenelbaz1@mail.tau.ac.il** 
+**For questions or support, please contact: edenel0109@gmail.com** 
