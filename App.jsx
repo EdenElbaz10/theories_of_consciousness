@@ -642,22 +642,32 @@ export default function App() {
         <div
           style={{
             position: "absolute",
-            top: "-25px",
-            right: "-25px",
-            width: "40px",
-            height: "40px",
+            top: "-35px",
+            right: "-35px",
+            width: "60px",
+            height: "60px",
             borderRadius: "50%",
-            backgroundColor: `rgb(0, ${Math.floor(
-              150 + data.metrics[data.selectedMetric] * 100
-            )}, 255)`,
+            backgroundColor: (() => {
+              const metricValue = data.metrics[data.selectedMetric];
+              const range = data.metricRange;
+              if (range && range.min !== range.max) {
+                // Normalize the value to 0-1 range based on actual min/max
+                const normalizedValue = (metricValue - range.min) / (range.max - range.min);
+                const blueIntensity = Math.floor(150 + normalizedValue * 100);
+                return `rgb(0, ${blueIntensity}, 255)`;
+              } else {
+                // Fallback to original calculation if no range or all values are the same
+                return `rgb(0, ${Math.floor(150 + metricValue * 100)}, 255)`;
+              }
+            })(),
             color: "white",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "11px",
+            fontSize: "14px",
             fontWeight: "bold",
-            border: "2px solid white",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
+            border: "3px solid white",
+            boxShadow: "0 3px 6px rgba(0,0,0,0.3)",
             zIndex: 10,
           }}
         >
@@ -924,12 +934,21 @@ export default function App() {
   // Add this new useEffect to handle metric selection changes
   useEffect(() => {
     if (networkMetrics && nodes.length > 0) {
+      // Calculate min and max values for the selected metric
+      const metricValues = Object.values(networkMetrics.nodeMetrics)
+        .map(nodeMetrics => nodeMetrics[selectedMetric])
+        .filter(value => value !== undefined && !isNaN(value));
+      
+      const minValue = Math.min(...metricValues);
+      const maxValue = Math.max(...metricValues);
+      
       const updatedNodes = nodes.map((node) => ({
         ...node,
         data: {
           ...node.data,
           metrics: networkMetrics.nodeMetrics[node.id],
           selectedMetric: selectedMetric,
+          metricRange: { min: minValue, max: maxValue },
         },
       }));
       setNodes(updatedNodes);
@@ -1222,6 +1241,7 @@ export default function App() {
         ...node.data,
         metrics: metrics.nodeMetrics[node.id],
         selectedMetric: "None", // Set to None by default
+        metricRange: null, // Will be set when a metric is selected
       },
     }));
 
