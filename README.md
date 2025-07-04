@@ -24,39 +24,13 @@ This platform allows you to:
    - Create your own theory with custom claims
    - Perfect for developing new theoretical frameworks
 
-## Key Features
-
-### 🔗 Connection System
-- **Multiple Connection Points**: 8 connection handles per node (top, bottom, left, right)
-- **Directed Edges**: Arrows show relationship direction
-
-
-### 🎨 Interactive Node Management
-- **Color Coding**: Assign up to 4 colors per claim using gradient backgrounds
-- **Text Editing**: Double-click any claim to edit its content
-- **Visual Distinction**: Custom claims are highlighted with green borders
-- **Copy/Paste Colors**: Reuse color schemes across multiple claims
-
-
-### 📊 Network Analysis (Color-coded circles display metric values on each node)
+## 📊 Network Analysis (Color-coded circles display metric values on each node)
 - **PageRank**: Measures node importance based on incoming connections
 - **Local Reaching Centrality (LRC)**: Quantifies node reachability
 - **Betweenness Centrality**: Identifies bridge nodes in the network
-- **Reachability**: Shows how many nodes can be reached from each node
-
-
-### 💾 Data Management
-- **Auto-Save**: Automatic localStorage backup
-- **Export/Import**: JSON format for sharing and backup
-- **PNG Export**: PNG export for presentations
-- **Theory Switching**: Seamless transitions between theories
-
+- **Reaching Centrality**: Shows how many nodes can be reached from each node
 
 ## Getting Started
-
-### Prerequisites
-- Modern web browser (Chrome, Firefox, Safari, Edge)
-- No installation required - runs entirely in the browser
 
 ### Usage
 
@@ -65,30 +39,24 @@ This platform allows you to:
    - Each theory loads with its predefined claims
 
 2. **Explore Claims**
-   - Claims appear as colored boxes on the canvas
-   - Double-click to edit claim text
    - Drag to reposition (snaps to grid)
-
-3. **Create Connections**
+   - Double-click to edit claim text
    - Click and drag from one node's handle to another
+   - Click "Add New Claim" to create custom nodes
 
-4. **Customize Appearance**
+3. **Customize Appearance**
    - Select a node to see color controls
    - Add up to 4 colors for gradient effects
    - Copy/paste color schemes between nodes
 
-5. **Add Custom Claims**
-   - Click "Add New Claim" to create custom nodes
-
-6. **Analyze Network**
+4. **Analyze Network**
    - Click "Analyze" to calculate network metrics
    - Select metrics from the dropdown to display on nodes
-   - View network statistics
 
 7. **Export Your Work**
    - "Download" saves as JSON for later editing
    - "Load Map" imports previously saved networks
-   - "Save as PNG" creates presentation-ready images
+   - "Save as PNG"
 
 ## 📈 Network Metrics Explained
 
@@ -102,12 +70,9 @@ $$\text{Reach Centrality}(i) = \frac{\text{Number of nodes reached by } i}{N-1}$
 
 Where $N$ = Total number of nodes.
 
-
-
 ### Local Reaching Centrality (LRC)
 - Quantifies how many other nodes can be reached
 - Accounts for path distance (closer nodes weighted more)
-
 
 $$\text{LRC}(i) = \frac{1}{N-1} \sum_{j \in R(i)} \frac{1}{d_{ij}}$$
 
@@ -118,11 +83,9 @@ Where:
 - LRC rewards nodes that can reach others in fewer steps
 
 
-
 ### Betweenness Centrality
 - Measures how often a node lies on the shortest path between two other nodes in the network.
 - High betweenness: the claim acts as a bridge between different parts of the theory.
-
 
 $$\text{Betweenness centrality}(i) = \sum_{s \neq i \neq t} \frac{\sigma_{st}(i)}{\sigma_{st}}$$
 
@@ -131,11 +94,9 @@ Where:
 - $\sigma_{st}(i)$ = Number of those paths that pass through node $i$
 
 
-
 ### PageRank
 - Measures node importance based on incoming connections
 - High PageRank: the claim is supported by other highly important claims, making it a key part of the theory.
-
 
 $$\text{PR}(i) = \frac{1-d}{N} + d \sum_{j \in \text{Predecessors}(i)} \frac{\text{PR}(j)}{L(j)}$$
 
@@ -146,28 +107,6 @@ Where:
 - $\text{PR}(j)$ = PageRank of node $j$ (importance of the claim linking to $i$)
 - $L(j)$ = Number of outgoing links from node $j$ (how many claims $j$ justifies)
 
-
-## 🔧 Technical Details
-
-### Built With
-- **React**: Modern UI framework
-- **ReactFlow**: Interactive node-based editor
-- **JavaScript**: Core functionality
-- **CSS**: Styling and animations
-- **localStorage**: Data persistence
-
-### Browser Compatibility
-- Chrome 80+
-- Firefox 75+
-- Safari 13+
-- Edge 80+
-
-### Performance
-- Handles networks with 100+ nodes efficiently
-- Real-time metric calculations
-- Smooth animations and interactions
-- Responsive design for various screen sizes
-
 ## Tips for Effective Use
 
 ### Organization
@@ -176,13 +115,27 @@ Where:
 - Create clear connection patterns
 - Use custom claims for unique insights
 
-### Analysis
-- Start with one theory to understand the interface
-- Compare metrics across different theories
-- Look for patterns in connection structures
-- Identify central vs. peripheral claims
+## Installation
+1. Click the green `code` button, download as zip, then extract it locally (alternatively, clone the repo)
+2. Install node from: https://nodejs.org/en/download
+- Windows: Choose `Windows Installer (.msi)`
+- Mac: Choose `macOS Installer (.pkg)`
+3. Open a terminal in the folder:
+- Windows: open the folder, right click on the white screen and choose `Open in Terminal`
+- Mac: Open spotlight (`cmd + space`), write "terminal", open it and navigate to the folder by running:
+```sh
+cd Downloads/theories_of_consciousness-main
+```
+4. Install the app by running in the terminal:
+```sh
+npm install
+```
+5. Start the app by running in the terminal:
+```sh
+npm start
+```
 
-
+To stop the app, press in terminal `ctrl+c` (both on Windows and mac)
 
 ---
 
