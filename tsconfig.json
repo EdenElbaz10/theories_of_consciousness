@@ -1,0 +1,11 @@
+{
+  "include": ["./src/**/*"],  
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": false,
+    "jsx": "react-jsx",
+    "esModuleInterop": false,
+    "allowSyntheticDefaultImports": true
+  }
+}
+  
