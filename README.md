@@ -79,7 +79,6 @@ This platform allows you to:
 
 5. **Add Custom Claims**
    - Click "Add New Claim" to create custom nodes
-   - Custom claims have green borders for identification
 
 6. **Analyze Network**
    - Click "Analyze" to calculate network metrics

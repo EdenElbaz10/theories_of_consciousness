@@ -632,9 +632,7 @@ export default function App() {
           : colors[0],
     };
 
-    const isNewBox = !Object.values(theoryClaims)
-      .filter((claims) => Array.isArray(claims)) // Filter out null values
-      .some((claims) => claims.includes(data.label));
+    // Remove the isNewBox logic - all boxes will look the same
 
     // Add metric circle if metrics data exists AND a metric is selected (not "None")
     const metricCircle =
@@ -642,17 +640,18 @@ export default function App() {
         <div
           style={{
             position: "absolute",
-            top: "-35px",
-            right: "-35px",
-            width: "60px",
-            height: "60px",
+            top: "-40px",
+            right: "-40px",
+            width: "65px",
+            height: "65px",
             borderRadius: "50%",
             backgroundColor: (() => {
               const metricValue = data.metrics[data.selectedMetric];
               const range = data.metricRange;
               if (range && range.min !== range.max) {
                 // Normalize the value to 0-1 range based on actual min/max
-                const normalizedValue = (metricValue - range.min) / (range.max - range.min);
+                const normalizedValue =
+                  (metricValue - range.min) / (range.max - range.min);
                 const blueIntensity = Math.floor(150 + normalizedValue * 100);
                 return `rgb(0, ${blueIntensity}, 255)`;
               } else {
@@ -664,7 +663,7 @@ export default function App() {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: "14px",
+            fontSize: "20px",
             fontWeight: "bold",
             border: "3px solid white",
             boxShadow: "0 3px 6px rgba(0,0,0,0.3)",
@@ -699,7 +698,7 @@ export default function App() {
     return (
       <div
         style={{
-          border: `2px solid ${isNewBox ? "#4CAF50" : "#333"}`,
+          border: "2px solid #333",
           borderRadius: 8,
           padding: "2px 8px",
           ...gradientStyle,
@@ -712,7 +711,6 @@ export default function App() {
           justifyContent: "center",
           flexDirection: "column",
           textAlign: "center",
-          boxShadow: isNewBox ? "0 2px 4px rgba(0,0,0,0.2)" : "none",
           fontFamily: "Calibri, sans-serif",
         }}
         onDoubleClick={() => setIsEditing(true)}
@@ -752,7 +750,6 @@ export default function App() {
               borderRadius: "4px",
               fontSize: "12px",
               fontFamily: "Calibri, sans-serif",
-              fontWeight: isNewBox ? "bold" : "normal",
             }}
             className="nodrag"
           />
@@ -761,7 +758,7 @@ export default function App() {
             style={{
               fontSize: "12px",
               fontFamily: "Calibri, sans-serif",
-              fontWeight: isNewBox ? "bold" : "normal",
+              fontWeight: "normal",
             }}
           >
             {label}
@@ -936,12 +933,12 @@ export default function App() {
     if (networkMetrics && nodes.length > 0) {
       // Calculate min and max values for the selected metric
       const metricValues = Object.values(networkMetrics.nodeMetrics)
-        .map(nodeMetrics => nodeMetrics[selectedMetric])
-        .filter(value => value !== undefined && !isNaN(value));
-      
+        .map((nodeMetrics) => nodeMetrics[selectedMetric])
+        .filter((value) => value !== undefined && !isNaN(value));
+
       const minValue = Math.min(...metricValues);
       const maxValue = Math.max(...metricValues);
-      
+
       const updatedNodes = nodes.map((node) => ({
         ...node,
         data: {
