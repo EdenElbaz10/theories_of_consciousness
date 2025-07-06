@@ -116,6 +116,8 @@ Where:
 - Use custom claims for unique insights
 
 ## Installation
+
+### Option 1: Run Locally
 1. Click the green `code` button, download as zip, then extract it locally (alternatively, clone the repo)
 2. Install node from: https://nodejs.org/en/download
 - Windows: Choose `Windows Installer (.msi)`
@@ -136,6 +138,9 @@ npm start
 ```
 
 To stop the app, press in terminal `ctrl+c` (both on Windows and mac)
+
+### Option 2: Run on Sandbox Platform
+You can also run the app directly in your browser without any installation by visiting: [https://xk29y8.csb.app/](https://xk29y8.csb.app/)
 
 ---
 
