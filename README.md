@@ -26,9 +26,9 @@ This platform allows you to:
 
 ## 📊 Network Analysis (Color-coded circles display metric values on each node)
 - **PageRank**: Measures node importance based on incoming connections
-- **Local Reaching Centrality (LRC)**: Quantifies node reachability
+- **LRC**: Simple count of reachable nodes
 - **Betweenness Centrality**: Identifies bridge nodes in the network
-- **Reaching Centrality**: Shows how many nodes can be reached from each node
+- **Harmonic Centrality**: Quantifies node reachability with path distance weighting
 
 ## Getting Started
 
@@ -60,27 +60,27 @@ This platform allows you to:
 
 ## 📈 Network Metrics Explained
 
-### Reach Centrality
+### Local Reaching Centrality (LRC)
 
 - Simple count of reachable nodes
-- Higher Reach Centrality: The nodes are core ideas that affect most of the theory
+- Higher LRC: The nodes are core ideas that affect most of the theory
 
 
-$$\text{Reach Centrality}(i) = \frac{\text{Number of nodes reached by } i}{N-1}$$
+$$\text{LRC}(i) = \frac{\text{Number of nodes reached by } i}{N-1}$$
 
 Where $N$ = Total number of nodes.
 
-### Local Reaching Centrality (LRC)
+### Harmonic Centrality
 - Quantifies how many other nodes can be reached
 - Accounts for path distance (closer nodes weighted more)
 
-$$\text{LRC}(i) = \frac{1}{N-1} \sum_{j \in R(i)} \frac{1}{d_{ij}}$$
+$$\text{Harmonic Centrality}(i) = \frac{1}{N-1} \sum_{j \in R(i)} \frac{1}{d_{ij}}$$
 
 Where:
 - $N$ = Total number of nodes
 - $R(i)$ = Set of nodes that can be reached from node $i$
 - $d_{ij}$ = Shortest path length from node $i$ to node $j$
-- LRC rewards nodes that can reach others in fewer steps
+- Harmonic Centrality rewards nodes that can reach others in fewer steps
 
 
 ### Betweenness Centrality
