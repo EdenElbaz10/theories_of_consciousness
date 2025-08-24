@@ -290,7 +290,7 @@ const calculateNetworkMetrics = (nodes, edges) => {
     return pagerank;
   };
 
-  // Calculate LRC (Local Reaching Centrality)
+  // Calculate Harmonic Centrality (LRC)
   const calculateLRC = () => {
     const lrc = {};
 
@@ -328,7 +328,7 @@ const calculateNetworkMetrics = (nodes, edges) => {
     return lrc;
   };
 
-  // Calculate LRC_NX
+  // Calculate LRC (Local Reaching Centrality)
   const calculateLRC_NX = () => {
     const lrc_nx = {};
 
@@ -1409,8 +1409,8 @@ export default function App() {
           }}
         >
           <option value="None">None</option>
-          <option value="LRC_NX">Reach Centrality</option>
-          <option value="LRC">LRC</option>
+          <option value="LRC_NX">LRC</option>
+          <option value="LRC">Harmonic Centrality</option>
           <option value="Betweenness Centrality">Betweenness Centrality</option>
           <option value="PageRank">PageRank</option>
         </select>
