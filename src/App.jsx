@@ -18,159 +18,160 @@ import "reactflow/dist/style.css";
 // Define claims for each theory
 const theoryClaims = {
   RPT: [
-    "Recurrent processing (RP) that changes network activity in sensory areas and enables perceptual organization is both necessary and sufficient for consciousness",
-    "Every Function that requires RP that changes network activity will only be possible during conscious perception",
-    "Plasticity [potential for neuronal activity to change connectivity] is needed for consciousness",
-    "System with purely FF architecture cannot be conscious",
-    "Functions that are based on FF processing can be performed without consciousness",
-    "Information in visual short-term memory, which requires RP, is conscious",
-    "Stimulus localization is possible even if the stimulus is unconsciously processed",
-    "Base groupings/feature conjunction (e.g. combination of colour and orientation) are possible if the stimulus is unconsciously processed",
-    "Some interference (e.g., grey dots of different luminosity appearing on bright/dark background) could be possible even if stimulus is unconscious",
-    "Feature extraction and higher level categorizations (shape, object category) are possible even if the stimulus is unconsciously processed",
-    "Attention and availability for report are not necessary for C",
-    "Neural markers (RP) can serve as sufficient evidence for C, irrespective of report",
-    "Conscious perception overflows report, hence, perception is rich",
-    "Learning can take place for conscious but unattended events/stimuli",
-    "Perceptual organization requires RP that changes network activity: it's possible only during conscious perception",
-    "Figure-ground segregation should be possible only during conscious perception",
-    "Perceptual grouping (integration) should be possible only during conscious perception",
-    "Some inference (like Kanizsa illusion) is possible only during conscious perception",
-    "Inhibiting RP in sensory areas should impair perceptual organization",
-    "NMDA receptors, which enable cortico-cortical feedback and synaptic plasticity, are needed for consciousness",
-    "Recurrency creates conditions for Hebbian learning",
-    "NMDA receptors activation should be precondition for large-scale RP requiring consciousness",
-    "Inhibiting large-scale RP by targeting NMDA receptors should result in loss of (state) consciousness",
-    "Given a discrepancy between conscious perception and physical features of the stimulus, learning should occur for the former",
-    "Involvement of frontal areas is not necessary for C",
-    "Artificial and biological systems with recurrent architecture that enables learning and perceptual organization are conscious",
-    "Only consciously perceived stimuli evoke RP and have lasting impact on the brain",
-    "Unconscious learning should be impossible",
-    "NCC should not involve the PFC",
-    "Stimuli in change blindness and inattentional blindness paradigms are consciously perceived",
+    "Recurrent processing (RP) that changes network activity in sensory areas and enables perceptual organization is both necessary and sufficient for consciousness (2)",
+    "Every Function that requires RP that changes network activity will only be possible during conscious perception (3)",
+    "RP allowing plasticity (potential for neuronal activity to change connectivity) is needed for consciousness (2)",
+    "System with purely FF architecture cannot be conscious (3)",
+    "Functions that are based on FF processing can be performed without consciousness (7)",
+    "Information in visual short-term memory, which requires RP and does not require attention, is conscious (3)",
+    "Stimulus localization is possible even if the stimulus is unconsciously processed (7)",
+    "Base groupings/feature conjunction (e.g. combination of colour and orientation) are possible if the stimulus is unconsciously processed  (1)",
+    "Some interference (e.g., grey dots of different luminosity appearing on bright/dark background) could be possible even if stimulus is unconscious (7)",
+    "Feature extraction and higher level categorizations (shape, object category) are possible even if the stimulus is unconsciously processed  (7)",
+    "Attention and availability for report are not necessary for C (4)",
+    "Neural markers (RP) can serve as sufficient evidence for C, irrespective of report (5)",
+    "Conscious perception overflows report, hence, perception is rich (5)",
+    "Learning can take place for conscious but unattended events/stimuli (2)",
+    "Perceptual organization requires RP that changes network activity, so it’s possible only during conscious perception (7)",
+    "Figure-ground segregation should be possible only during conscious perception (7)",
+    "Perceptual grouping (integration) should be possible only during conscious perception (7)",
+    "Some inference (like Kanizsa illusion) is possible only during conscious perception (7)",
+    "Inhibiting RP in sensory areas should impair perceptual organization (7)",
+    "NMDA receptors, which enable cortico-cortical feedback and synaptic plasticity, are needed for consciousness (6)",
+    "Recurrency creates conditions for Hebbian learning (2)",
+    "NMDA receptors activation should be precondition for large-scale RP requiring consciousness (6)",
+    "Inhibiting large-scale RP by targeting NMDA receptors should result in loss of (state) consciousness (6)",
+    "Given a discrepancy between conscious perception and physical features of the stimulus, learning should occur for the former (2)",
+    "Involvement of frontal areas (which are the neural basis of attention and reportability) is not necessary for C (3)",
+    "Artificial and biological systems with recurrent architecture that enables learning and perceptual organization are conscious (6;8)",
+    "Only consciously perceived stimuli are accompanied by RP and have lasting impact on the brain (2)",
+    "Unconscious learning should be impossible (2)",
+    "NCC should not involve the PFC (3)",
+    "Stimuli in change blindness and inattentional blindness paradigms are consciously perceived (3)",
   ],
   GNW: [
-    "Decoding of all contents of consciousness should be possible from PFC",
-    "Long-range synchronization (gamma/beta) should signal information sharing between PFC and category-specific areas",
-    "Frontoparietal area should be one of the areas of implementation of GW",
-    "Competing activity in frontal areas prior to stimulus presentation lowers the chance of consciously perceiving the stimulus",
-    "T2-induced activation should be limited to a brief bottom-up activation in specialized processors and possibly also transiently in GW neurons",
-    "Onset/Offset to tag appearance and disappearance of stimulus within C, if stimulus is attended",
-    "Unless the content of consciousness is actively maintained in WM, neural activity in the GW should go back to baseline after ignition",
-    "Critical NCCs should be found during later time window (e.g., starting after 200 ms post stimulus presentation), depending on evidence accumulation",
-    "Activation in sensory areas should include two peaks, the timing of the second follows ignition in the PFC and should be affected by feedback disruption",
-    "Late activation differentiates between C and UC processing",
-    "Neural representations of conscious percepts should show stability over time",
-    "Conscious states should be underpinned by prolonged and deeper activation compared to UC states",
-    "Complexity measures should be higher for conscious states",
-    "Long-range and feedback connections are needed for C because they maintain information in the GW by amplifying the signal",
-    "UC information should elicit local short-lived neural responses in specialized areas or in networks configured by GW activity",
-    "Long-axons pyramidal neurons between the GW and the modules allow global broadcasting of information",
-    "Attentional blink should occur",
-    "Artificial and biological systems that have a functionally equivalent global workspace are conscious",
-    "While GW is occupied by competing content X or by spontaneous activity, content Y is less likely to be perceived",
-    "Attention should be able to trigger conscious perception of a stimulus even after stimulus offset (possible decoupling of C and stimulus presentation)",
-    "Top-down selection determines the contents of C",
-    "Mobilization of information into the GW is signaled by ignition (sudden, coherent, exclusive activation of subset of WS neurons)",
-    "Inattentional blindness should occur",
-    "The GW can integrate only one state (e.g., percept, thought) at a time",
-    "Attentional gating selects the content of consciousness among competing representations that are inhibited",
-    "No trace conditioning without C",
-    "No detection of global violations over time without C",
-    "No flexible mental chaining without C",
-    "Items in GW are items in Working Memory",
-    "C processes can be long-lived",
-    "Incoming information that fails to attain the critical threshold level for triggering the GW ('failed ignition') should not be C",
-    "UC responses to stimuli are short lived",
-    "If strong stimuli involving resonant loops within medium range connections are unattended, they remain preconscious",
-    "Top-down attention should be needed for subliminal effects (e.g., priming) elicited by weak stimuli",
-    "Information outside GW is processed unconsciously by separate modules in parallel",
-    "GW can influence unconscious processes, which are not all fully automatic",
-    "Novel combinations of operations should require C",
-    "Information in modules/specialized brain areas outside of GW is encapsulated",
-    "GW operates as information bottleneck: entry is gated",
-    "Attentional processes mobilize information and broadcast it into the GW",
-    "GW enables maintenance of percepts over time",
-    "AMPA receptors modulate feedforward  connections while NMDA receptors modulate feedback connectivity, making them necessary for C",
-    "GW is needed to integrate between different modules and has the capacity to influence their activity",
-    "Consciousness is accounted for in functional terms: subjective availability of information to a global workspace of input/output systems that breaks modularity",
+    "GW operates as information bottleneck: entry is gated (3; 4)",
+    "Attentional processes mobilize information and broadcast it into the GW (1)",
+    "GW is needed to integrate between different modules and has the capacity to influence their activity (1)",
+    "GW enables maintenance of percepts over time (1)",
+    "Attentional gating selects the content of C among competing representations that are inhibited  (1)",
+    "Inattentional blindness should occur (1)",
+    "The GW can integrate only one state (e.g., percept, thought) at a time (9)",
+    "T2-induced activation should be limited to a brief bottom-up activation in specialized processors and possibly also transiently in GW neurons (4)",
+    "Information in modules/specialized brain areas outside of GW is encapsulated (1)",
+    "Information outside GW is processed unconsciously by separate modules in parallel (1)",
+    "Novel combinations of operations should require C (1)",
+    "UC information should elicit local short-lived neural responses in specialized areas or in networks configured by GW activity (14)",
+    "Long-axons pyramidal neurons between the GW and the modules allow global broadcasting of information (14)",
+    "Long-range and feedback connections are needed for C because they maintain information in the GW by amplifying the signal (14)",
+    "Neural representations of C percepts should show stability over time (1)",
+    "Items in GW are items in Working Memory (14)",
+    "UC responses to stimuli are short lived (1)",
+    "No trace conditioning without C (8)",
+    "No detection of global violations over time without C (6)",
+    "No flexible mental chaining without C (7)",
+    "C states should be underpinned by prolonged and deeper activation compared to UC states (14)",
+    "Complexity measures should be higher for C states (14)",
+    "Consciousness is accounted for in functional terms: subjective availability of information to a global workspace of input/output systems that breaks modularity (1)",
+    "Mobilization of information into the GW is signalled by ignition (sudden, coherent, exclusive activation of subset of WS neurons) (3; 14)",
+    "Top-down selection determines the contents of C (1; 14)",
+    "While GW is occupied by competing content X or by spontaneous activity, content Y is less likely to be perceived (3; 4)",
+    "Attentional blink should occur (3; 4)",
+    "Late activation differentiates between C and UC processing (14)",
+    "Activation in sensory areas should include two peaks, the timing of the second follows ignition in the PFC and should be affected by feedback disruption (4)",
+    "Critical NCCs should be found during later time window (e.g., starting after 200 ms post stimulus presentation), depending on evidence accumulation (8; 14)",
+    "Unless the content of C is actively maintained in WM, neural activity in the GW should go back to baseline after ignition (12; 15)",
+    "Onset/Offset to tag appearance and disappearance of stimulus within C, if stimulus is attended (15)",
+    "Frontoparietal area, held to be involved attentional processes and global exchange of info, should be one of the areas of implementation of GW (1)",
+    "Long-range synchronization (gamma/beta) should signal information sharing between PFC and category-specific areas  (1; 14)",
+    "Decoding of all contents of C should be possible from PFC (15)",
+    "Competing activity in frontal areas prior to stimulus presentation lowers the chance of consciously perceiving the stimulus (4)",
+    "Artificial and biological systems that have a functionally equivalent global workspace are conscious (13)",
+    "C processes can be long-lived (1)",
+    "GW can influence UC processes, which are not all fully automatic (1; 2)",
+    "Top-down attention should be needed for subliminal effects (e.g., priming) elicited by weak stimuli (2; 5)",
+    "Incoming information that fails to attain the critical threshold level for triggering the GW (‘failed ignition’) should not be C (11; 15)",
+    "If strong stimuli involving resonant loops within medium range connections are unattended, they remain preconscious (5)",
+    "Attention should be able to trigger C perception of a stimulus even after stimulus offset (possible decoupling of C and stimulus presentation) (10)",
+    "AMPA receptors modulate feedforward  connections while NMDA receptors modulate feedback connectivity, making them necessary for C (16)",
   ],
   IIT: [
-    "All features of a consciously perceived stimulus should be maximally decodable from posterior areas",
-    "Across various possible spatiotemporal grains to study the brain, the one constitutive of consciousness should be the one achieving maximal φ",
-    "Reduction of transmission in callosal fibres should lead to a point at which one consciousness splits in two. (Split brain)",
-    "Loss and recovery of consciousness should be associated with the breakdown and recovery of the capacity for information integration.",
-    "When c-e powers of neuronal populations are incongruent with c-e powers of the PSC, corresponding stimulus should remain unconscious",
-    "Artificial systems, even if functionally equivalent to human brains, won't be conscious (no high Φ)",
-    "Similarity judgments between experiences should map onto similarity between CESs, as reconstructed from brain states",
-    "There should be content specific synchronization between high-level and low-level areas in the posterior cortex",
-    "Network that corresponds to content of C should be actively maintained for the duration of that content in C",
-    "Expert meditators experiencing 'pure presence' should exhibit decrease in gamma band, especially in posterior areas",
-    "Experience of 'pure presence' should exhibit largely inactive posterior cortex",
-    "Deactivating already inactive neurons of retinotopic cortex should remove part of spatial experience",
-    "Altered connectivity in retinotopic cortex should lead to change in experienced space even without changes in neuronal activity",
-    "Conscious perception overflows report",
-    "Artificial activation of neurons near the then terminus in a directed grid should result in perceiving a stimulus as having occurred earlier",
-    "Modulation of synaptic strength/excitability of neurons in directed grids should change properties of phenomenal flow regardless of activity levels",
-    "Duration of the extended present should be proportional to the number of neurons constituting a directed grid",
-    "Local strengthening or weakening of horizontal connections in topographic areas should lead to a local distortion of experienced visual space",
-    "Posterior cortex is the likely candidate for NCC",
-    "Changes in the strength of connections within PSC should be associated with changes in experience, even if neural activity does not change",
-    "Brain Complexity measures sensitive to specialization / integration should correlate with consciousness",
-    "Inactive neurons can contribute to consciousness",
-    "Horizontal connections within topographically organized visual areas would be needed to experience visual space",
-    "Spatial structure of experience should map into features specified by neurons organized in non-directed grid-like networks",
-    "Temporal structure of experience should map into features specified by neurons organized in directed grids",
-    "Lattices of specialized + integrated units are well-suited to achieve high φ",
-    "PSC needs to be both specialized and integrated to achieve high φ",
-    "Only distinctions with c-e powers compatible with the c-e powers of the whole PSC contribute to C",
-    "Similarity between Φ structures should map into similarity between experiences",
-    "Every distinction that is consciously experienced should be manifested in the CES for as long as it is experienced",
-    "All units in the PSC must have the potential to be active",
-    "C is extremely rich (i.e., highly structured)",
-    "Entire PSC (not only task-relevant activity) supports CES (= experience)",
-    "Type of experience (e.g., spatial vs temporal) should depend on the architecture of the substrate specifying the CES",
-    "CONNECTIVITY: the connections between units of a PSC determine whether it can support high φ",
-    "Spatiotemporal grain that matters for consciousness is the one that maximizes φ",
-    "Functional (extrinsic) equivalence doesn't entail phenomenal (intrinsic) equivalence",
-    "ACTIVITY: changes in the state of the PSC units determine changes in CES (and therefore in experience)",
-    "Based on introspection, every experience is essentially intrinsic, specific, unitary, definite, and structured = Operationally, the PSC must be a maximum of irreducible, specific, intrinsic c-e power, supporting a CES",
+    "Similarity between Φ structures should map into similarity between experiences (8)",
+    "Based on introspection, every experience is essentially intrinsic, specific, unitary, definite, and structured (1; 8)",
+    "CONNECTIVITY: the connections between units of a PSC determine whether it can support high φ (8)",
+    "Spatiotemporal grain that matters for consciousness is the one that maximizes φ (8)",
+    "Functional (extrinsic) equivalence doesn’t entail phenomenal (intrinsic) equivalence (8)",
+    "ACTIVITY: changes in the state of the PSC units determine changes in CES (and therefore in experience) (8)",
+    "Entire PSC (not only task-relevant activity) supports CES (= experience) (1)",
+    "All units in the PSC must have the potential to be active (1)",
+    "Every distinction that is consciously experienced should be manifested in the CES for as long as it is experienced (8; 9)",
+    "Lattices of specialized + integrated units are well-suited to achieve high φ (7)",
+    "Spatial structure of experience should map into features specified by neurons organized in non-directed grid-like networks (6)",
+    "PSC needs to be both specialized and integrated to achieve high φ (5)",
+    "Changes in the strength of connections within PSC should be associated with changes in experience, even if neural activity does not change (8)",
+    "Posterior cortex, which has the right architecture for high integration and specialization, is the likely candidate for NCC (4)",
+    "Brain Complexity measures sensitive to specialization / integration should correlate with consciousness (5)",
+    "Horizontal connections within topographically organized visual areas would be needed to experience visual space (6; 7)",
+    "Inactive neurons can contribute to consciousness (1)",
+    "Deactivating already inactive neurons of retinotopic cortex should remove part of spatial experience (11)",
+    "Experience of “pure presence” should exhibit largely inactive posterior cortex (12)",
+    "Expert meditators experiencing “pure presence” should exhibit decrease in gamma band, especially in posterior areas  (12)",
+    "Network that corresponds to content of C should be actively maintained for the duration of that content in C (9)",
+    "There should be content specific synchronization between high-level and low-level areas in the posterior cortex (9)",
+    "Local strengthening or weakening of horizontal connections in topographic areas should lead to a local distortion of experienced visual space (11)",
+    "Conscious perception overflows report (1; 13)",
+    "All features of a consciously perceived stimulus should be maximally decodable from posterior areas (4; 9)",
+    "Reduction of transmission in callosal fibres should lead to a point at which one consciousness splits in two. (Split brain) (1)",
+    "Loss and recovery of consciousness should be associated with the breakdown and recovery of the capacity for information integration. (5)",
+    "Across various possible spatiotemporal grains to study the brain, the one constitutive of consciousness should be the one achieving maximal φ (3)",
+    "Artificial systems, even if functionally equivalent to human brains, won’t be conscious (no high Φ) (8)",
+    "Similarity judgments between experiences should map onto similarity between CESs, as reconstructed from brain states (2)",
+    "Operationally, the PSC must be a maximum of irreducible, specific, intrinsic c-e power, supporting a CES (1; 8)",
+    "C is extremely rich (i.e., highly structured) (13)",
+    "Type of experience (e.g., spatial vs temporal) should depend on the architecture of the substrate specifying the CES (1)",
+    "Only distinctions with c-e powers compatible with the c-e powers of the whole PSC contribute to C (8)",
+    "When c-e powers of neuronal populations are incongruent with c-e powers of the PSC, corresponding stimulus should remain unconscious (10)",
+    "Temporal structure of experience should map into features specified by neurons organized in directed grids (14)",
+    "Modulation of synaptic strength/ excitability of neurons in directed grids should change properties of phenomenal flow regardless of activity levels (14)",
+    "Duration of the extended present should be proportional to the number of neurons constituting a directed grid (14)",
+    "Artificial activation of neurons near the “then” terminus in a directed grid should result in perceiving a stimulus as having occurred earlier (14)",
   ],
   PRM: [
-    "Consciousness corresponds to a higher-order state that is about (re-represents/ points at/asserts that one is in) a first-order state (i.e., automatic inner awareness of one's own mental states)",
-    "If you are not aware of being in a mental state, then there's nothing it is like for you to be in that mental state",
-    "There can be a mismatch between higher order states and first order states",
-    "Inner awareness should correlate with implicit metacognitive abilities",
-    "Function of C is formation of subjectively justified beliefs about the external world (i.e., monitoring reality)",
-    "Unconscious processing can have the same functional capacities of conscious processing, without formation of subjectively justified beliefs",
-    "Given the right paradigm, discrimination performance should be the same with and without conscious perception",
-    "PFC held to be involved in metacognitive abilities, is required for higher-order states",
-    "Consciousness requires higher-order cognitive states",
-    "Change in FOS without update in HOS should lead to change blindness",
-    "Conscious states need to be accessed (no P-c without A-c)",
-    "Mismatch between FOS and HOS is related to inflation of minimally attended representations while matching discrimination performance",
-    "Consciousness just appears rich, though it isn't",
-    "Inflation should be modulated by expectations: inflation is stronger when expectations are higher",
-    "Increased tendency to make false alarms in detection tasks for stimuli presented peripherally",
-    "Reduced metacognitive capacities to track task performance on peripheral information",
-    "Stronger inflation effects when subject attends to expected stimulus properties",
-    "Subjects should report rich phenomenology while missing details of the percept",
-    "Perception doesn't overflow report",
-    "Imagery vividness is modulated by whether the HOS labels an internally generated FOS as more similar to noise or to an external stimulus",
-    "A change in the higher-order state should lead to a change in consciousness even if the first-order state remains the same",
-    "Manipulating the PFC should induce confusion between perception and imagery",
-    "PFC is necessary for conscious perception",
-    "Changes in the prefrontal (and parietal) areas should lead to changes in consciousness",
-    "TMS applied to DLPFC should change subjective report about awareness of a stimulus without affecting task performance",
-    "Visual hallucinations can occur if functions of PFC are disrupted (e.g., Schizophrenia, dopaminergic drugs, direct cortical stimulation)",
-    "Decodability of inflated perception should be high in later stages of the visual processing hierarchy, not in primary visual cortex",
-    "Top-down effects of expectations on inflation should be reflected by timecourses of decodability between frontoparietal and visual areas",
-    "TMS stimulation of PFC and lesions should impact subjective reports of consciousness",
-    "Artificial and biological systems with proper first-order states, higher-order mechanisms, and metacognitive abilities are conscious",
-    "Task performance is driven by first-order states, not higher-order ones",
-    "Inner awareness must discriminate between neural activity due to external stimulus and noise",
-    "HOS relies on averages to track neuronal excitability",
-    "Stimuli presented when neuronal excitability is high should lead to more false alarms and higher visibility/confidence ratings",
+    "Given background conditions, a first-order state is conscious if it is indexed, via a pointer, by a higher-order state, as reliably reflecting the world as it is now (5; 8)",
+    "HOS can incorrectly index the reliability of the FOS (5)",
+    "Inner awareness should correlate with implicit metacognitive abilities (1)",
+    "Function of C is formation of subjectively justified beliefs about the external world (i.e., monitoring reality) (1)",
+    "Given the right paradigm, discrimination performance should be the same with and without conscious perception (1)",
+    "In humans, PFC, held to be involved in metacognitive abilities, is required for higher-order states (1; 5)",
+    "Consciousness requires higher-order cognitive states (5)",
+    "Conscious states need to be accessed (no P-c without A-c) (4; 5)",
+    "Indexing reliability of FOS incorrectly leads to inflation (1)",
+    "Consciousness just appears rich, though it isn’t (4; 5)",
+    "Inflation should be modulated by expectations: inflation is stronger when expectations are stronger (4)",
+    "Increased tendency to make false alarms in detection tasks for stimuli presented peripherally (3)",
+    "Metacognitive capacities to track task performance are reduced (3)",
+    "Participants should report rich phenomenology while missing details of the percept (3)",
+    "Perception doesn’t overflow report (4)",
+    "Imagery vividness is modulated by whether the HOS labels an internally generated FOS as more similar to noise or to an external stimulus (1)",
+    "A change in HOS should lead to a change in consciousness even if the FOS remains the same (5)",
+    "Manipulating the PFC should induce confusion between perception and imagery (1)",
+    "In humans, PFC is necessary for conscious perception (2; 5)",
+    "Some targeted changes in the prefrontal (and parietal) areas should lead to changes in consciousness (1; 5)",
+    "Visual hallucinations can occur if functions of PFC are disrupted (e.g., Schizophrenia, dopaminergic drugs, direct cortical stimulation) (1)",
+    "Decodability of inflated perception should be high in later stages of the visual processing hierarchy, not in primary visual cortex (4)",
+    "Top-down effects of expectations on inflation should be reflected by timecourses of decodability between frontoparietal and visual areas (4)",
+    "TMS stimulation of PFC and lesions should impact subjective reports of consciousness (1; 5)",
+    "Given background conditions, artificial and biological systems with FOS, higher-order mechanisms, and metacognitive abilities are conscious (6; 7)",
+    "FOS represent the world, HOS track the reliability of FOS (1)",
+    "If you are not aware of being in a mental state, then there’s nothing it is like for you to be in that mental state (1)",
+    "Impairing the functioning of DLPFC (e.g., with TMS) should change subjective report about awareness without affecting task performance (1)",
+    "Inner awareness must discriminate between neural activity due to external stimulus and noise (8)",
+    "HOS relies on averages to track internal noise (8)",
+    "Stimuli presented when neuronal excitability is high should lead to more false alarms and higher visibility/confidence ratings (8)",
+    "The function of the pointer (i.e., inner awareness) is an implicit metacognitive ability (1)",
+    "Inflation should be modulated by attention: when attention is reduced, participants should be more likely to say something is there when it is not (1; 4)",
+    "System tracking reliability of sensory signal might not track updated baseline neuronal excitability (8)",
+    "FOS drive task performance (1; 5)",
   ],
   other: [], // Empty array for other theory
 };
@@ -1512,9 +1513,29 @@ export default function App() {
     </div>
   );
 
+  // Shared button style for sidebar
+  const sidebarButtonStyle = {
+    padding: "8px 12px",
+    fontSize: "12px",
+    cursor: "pointer",
+    backgroundColor: "transparent",
+    border: "1px solid rgba(0,0,0,0.08)",
+    borderRadius: "6px",
+    width: "100%",
+    textAlign: "center",
+    transition: "all 0.2s ease",
+  };
+
+  const handleButtonHover = (e, isHovering) => {
+    e.target.style.backgroundColor = isHovering ? "rgba(0,0,0,0.04)" : "transparent";
+  };
+
   return (
     <div style={{ height: "100vh", width: "100%" }}>
       <ReactFlowProvider>
+
+
+
         <div
           style={{
             position: "absolute",
@@ -1573,102 +1594,70 @@ export default function App() {
             right: 10,
             zIndex: 10,
             backgroundColor: "white",
-            padding: "8px",
-            borderRadius: "6px",
-            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+            padding: "12px",
+            borderRadius: "8px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             display: "flex",
             flexDirection: "column",
-            gap: "6px",
-            width: "130px",
+            gap: "8px",
+            width: "140px",
           }}
         >
+          <img
+            src="/lab_logo.png"
+            alt="Lab Logo"
+            style={{
+              width: "100%",
+              height: "auto",
+              display: "block",
+              marginBottom: "4px",
+            }}
+          />
           <button
             onClick={addNewBox}
-            style={{
-              padding: "4px 8px",
-              fontSize: "12px",
-              cursor: "pointer",
-              backgroundColor: "#f0f0f0",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              width: "100%",
-              textAlign: "left",
-            }}
+            onMouseEnter={(e) => handleButtonHover(e, true)}
+            onMouseLeave={(e) => handleButtonHover(e, false)}
+            style={sidebarButtonStyle}
           >
             Add New Claim
           </button>
           <button
             onClick={resetLayout}
-            style={{
-              padding: "4px 8px",
-              fontSize: "12px",
-              cursor: "pointer",
-              backgroundColor: "#f0f0f0",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              width: "100%",
-              textAlign: "left",
-            }}
+            onMouseEnter={(e) => handleButtonHover(e, true)}
+            onMouseLeave={(e) => handleButtonHover(e, false)}
+            style={sidebarButtonStyle}
           >
             Reset Layout
           </button>
           <button
             onClick={exportNetwork}
-            style={{
-              padding: "4px 8px",
-              fontSize: "12px",
-              cursor: "pointer",
-              backgroundColor: "#f0f0f0",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              width: "100%",
-              textAlign: "left",
-            }}
+            onMouseEnter={(e) => handleButtonHover(e, true)}
+            onMouseLeave={(e) => handleButtonHover(e, false)}
+            style={sidebarButtonStyle}
           >
             Download
           </button>
           <button
             onClick={importNetwork}
-            style={{
-              padding: "4px 8px",
-              fontSize: "12px",
-              cursor: "pointer",
-              backgroundColor: "#f0f0f0",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              width: "100%",
-              textAlign: "left",
-            }}
+            onMouseEnter={(e) => handleButtonHover(e, true)}
+            onMouseLeave={(e) => handleButtonHover(e, false)}
+            style={sidebarButtonStyle}
           >
             Load Map
           </button>
           <button
             onClick={analyzeNetwork}
-            style={{
-              padding: "4px 8px",
-              fontSize: "12px",
-              cursor: "pointer",
-              backgroundColor: "#f0f0f0",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              width: "100%",
-              textAlign: "left",
-            }}
+            onMouseEnter={(e) => handleButtonHover(e, true)}
+            onMouseLeave={(e) => handleButtonHover(e, false)}
+            style={sidebarButtonStyle}
           >
             Analyze
           </button>
           <button
             onClick={exportAsPNG}
-            style={{
-              padding: "4px 8px",
-              fontSize: "12px",
-              cursor: "pointer",
-              backgroundColor: "#f0f0f0",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              width: "100%",
-              textAlign: "left",
-            }}
+            onMouseEnter={(e) => handleButtonHover(e, true)}
+            onMouseLeave={(e) => handleButtonHover(e, false)}
+            style={sidebarButtonStyle}
           >
             Save as PNG
           </button>
